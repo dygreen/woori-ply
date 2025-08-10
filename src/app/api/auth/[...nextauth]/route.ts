@@ -92,6 +92,21 @@ const handler = NextAuth({
 
             return true
         },
+        async jwt({ token, user }) {
+            if (user) {
+                token.user = {
+                    name: user.name,
+                    email: user.email,
+                }
+            }
+            return token
+        },
+        async session({ session, token }) {
+            if (token.user) {
+                session.user = token.user
+            }
+            return session
+        },
     },
 })
 
