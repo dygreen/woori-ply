@@ -14,7 +14,7 @@ export default function LandingPage() {
                 <div className="space-y-4">로그인 상태</div>
             ) : (
                 <button
-                    onClick={() => signIn('github')}
+                    onClick={() => signIn()}
                     className="rounded-xl border px-4 py-2"
                 >
                     로그인하기
