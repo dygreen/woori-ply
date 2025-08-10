@@ -1,6 +1,6 @@
 'use client'
 
-import { signIn, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 
 export default function LandingPage() {
     const { status } = useSession()
@@ -11,7 +11,12 @@ export default function LandingPage() {
             <h1 className="text-2xl font-bold">우리플리</h1>
 
             {isAuthed ? (
-                <div className="space-y-4">로그인 상태</div>
+                <>
+                    <div className="space-y-4">로그인 상태</div>
+                    <button type="button" onClick={() => signOut()}>
+                        <span>로그아웃</span>
+                    </button>
+                </>
             ) : (
                 <button
                     onClick={() => signIn()}

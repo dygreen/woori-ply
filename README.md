@@ -28,7 +28,7 @@
 ## ✨ 주요 기능
 
 - **소셜 로그인**
-    - GitHub 계정으로 간편 로그인
+    - GitHub 계정으로 간편 로그인 (로그인 정보 DB 저장)
     - NextAuth Credentials 로그인 지원
 
 

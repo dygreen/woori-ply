@@ -20,6 +20,8 @@ const handler = NextAuth({
         GitHubProvider({
             clientId: process.env.GITHUB_ID!,
             clientSecret: process.env.GITHUB_SECRET!,
+            // 이메일 비공개 대비: 유저 이메일 받으려면 권장
+            authorization: { params: { scope: 'read:user user:email' } },
         }),
         CredentialsProvider({
             name: 'credentials',
@@ -57,6 +59,40 @@ const handler = NextAuth({
     ],
     adapter: MongoDBAdapter(clientPromise),
     session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
+    callbacks: {
+        // Github 로그인 유저 정보 DB 저장
+        async signIn({ user, account, profile }) {
+            if (account?.provider !== 'github') return true
+
+            const database: Db = await db()
+            const users = database.collection<UserCred>('user_cred')
+            const githubId = account.providerAccountId
+            const name = user.name ?? profile?.name ?? null
+            const email = user.email ?? profile?.email ?? undefined
+
+            // 이메일이 없을 수도 있으니 email OR githubId로 식별
+            const filter = email
+                ? { $or: [{ email }, { githubId }] }
+                : { githubId }
+            const now = new Date()
+
+            await users.updateOne(
+                filter,
+                {
+                    $setOnInsert: { createdAt: now },
+                    $set: {
+                        githubId,
+                        name,
+                        email,
+                        updatedAt: now,
+                    },
+                },
+                { upsert: true },
+            )
+
+            return true
+        },
+    },
 })
 
 export { handler as GET, handler as POST }
