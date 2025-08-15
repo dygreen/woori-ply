@@ -7,9 +7,11 @@ import { Box } from '@mui/system'
 import Link from 'next/link'
 import { User } from '@/types/user'
 import { useRouter } from 'next/navigation'
+import { useAlert } from '@/components/providers/AlertProvider'
 
 export default function SignUpForm() {
     const router = useRouter()
+    const { showSuccess, showError } = useAlert()
 
     const handleRegister = async (values: User) => {
         try {
@@ -23,10 +25,10 @@ export default function SignUpForm() {
             const data = await response.json()
 
             if (response.status === 201) {
-                alert(data.message)
+                showSuccess(data.message)
                 router.push('/')
             } else if (response.status === 409) {
-                alert(data.message)
+                showError(data.message)
             }
         } catch (err) {
             console.error(err)

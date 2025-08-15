@@ -2,6 +2,7 @@ import './globals.scss'
 import type { Metadata } from 'next'
 import SessionProvider from '@/components/providers/SessionProvider'
 import React from 'react'
+import { AlertProvider } from '@/components/providers/AlertProvider'
 
 export const metadata: Metadata = {
     title: '우리플리',
@@ -16,7 +17,9 @@ export default function RootLayout({
     return (
         <html lang="ko">
             <body>
-                <SessionProvider>{children}</SessionProvider>
+                <SessionProvider>
+                    <AlertProvider>{children}</AlertProvider>
+                </SessionProvider>
             </body>
         </html>
     )
