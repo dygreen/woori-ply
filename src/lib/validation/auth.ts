@@ -28,3 +28,5 @@ export const SignupSchema = Yup.object().shape({
             VALIDATION.pwdRegExp,
         ),
 })
+
+export type SignUpInput = Yup.InferType<typeof SignupSchema>

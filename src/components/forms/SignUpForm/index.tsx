@@ -5,8 +5,34 @@ import { SignupSchema } from '@/lib/validation/auth'
 import { TextField, Container, Button } from '@mui/material'
 import { Box } from '@mui/system'
 import Link from 'next/link'
+import { User } from '@/types/user'
+import { useRouter } from 'next/navigation'
 
 export default function SignUpForm() {
+    const router = useRouter()
+
+    const handleRegister = async (values: User) => {
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(values),
+            })
+            const data = await response.json()
+
+            if (response.status === 201) {
+                alert(data.message)
+                router.push('/')
+            } else if (response.status === 409) {
+                alert(data.message)
+            }
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
     return (
         <Container
             maxWidth="md"
@@ -21,11 +47,17 @@ export default function SignUpForm() {
                     password: '',
                 }}
                 validationSchema={SignupSchema}
-                onSubmit={(values) => {
-                    console.log(values)
-                }}
+                onSubmit={handleRegister}
             >
-                {({ values, handleChange, handleBlur, touched, errors }) => (
+                {({
+                    values,
+                    handleChange,
+                    handleBlur,
+                    touched,
+                    errors,
+                    isValid,
+                    dirty,
+                }) => (
                     <Form noValidate className="w-full max-w-xs px-4">
                         <Box display="grid" gap={2}>
                             <TextField
@@ -83,6 +115,7 @@ export default function SignUpForm() {
                                 variant="contained"
                                 size="small"
                                 type="submit"
+                                disabled={!isValid || !dirty}
                             >
                                 가입하기
                             </Button>
