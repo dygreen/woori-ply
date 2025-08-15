@@ -3,7 +3,7 @@ import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { MongoDBAdapter } from '@auth/mongodb-adapter'
 import { Db, WithId, Document, MongoClient } from 'mongodb'
-import { db } from '@/lib/db'
+import { db } from '@/lib/server/db'
 import bcrypt from 'bcryptjs'
 
 interface UserCred extends Document {

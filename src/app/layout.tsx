@@ -1,6 +1,7 @@
-import './globals.css'
+import './globals.scss'
 import type { Metadata } from 'next'
 import SessionProvider from '@/components/providers/SessionProvider'
+import React from 'react'
 
 export const metadata: Metadata = {
     title: '우리플리',
