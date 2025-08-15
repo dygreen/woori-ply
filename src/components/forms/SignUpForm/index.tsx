@@ -3,7 +3,6 @@
 import { Form, Formik } from 'formik'
 import { SignupSchema } from '@/lib/validation/auth'
 import { TextField, Container, Button } from '@mui/material'
-import { Box } from '@mui/system'
 import Link from 'next/link'
 import { User } from '@/types/user'
 import { useRouter } from 'next/navigation'
@@ -41,27 +40,27 @@ export default function SignUpForm() {
             fixed
             className="w-full h-screen flex flex-col items-center justify-center text-center"
         >
-            <h1 className="text-4xl font-bold mb-8">회원가입</h1>
-            <Formik
-                initialValues={{
-                    name: '',
-                    email: '',
-                    password: '',
-                }}
-                validationSchema={SignupSchema}
-                onSubmit={handleRegister}
-            >
-                {({
-                    values,
-                    handleChange,
-                    handleBlur,
-                    touched,
-                    errors,
-                    isValid,
-                    dirty,
-                }) => (
-                    <Form noValidate className="w-full max-w-xs px-4">
-                        <Box display="grid" gap={2}>
+            <div className="border border-black bg-white p-10 px-8 rounded-lg">
+                <h1 className="text-4xl font-bold mb-8">회원가입</h1>
+                <Formik
+                    initialValues={{
+                        name: '',
+                        email: '',
+                        password: '',
+                    }}
+                    validationSchema={SignupSchema}
+                    onSubmit={handleRegister}
+                >
+                    {({
+                        values,
+                        handleChange,
+                        handleBlur,
+                        touched,
+                        errors,
+                        isValid,
+                        dirty,
+                    }) => (
+                        <Form noValidate className="w-full max-w-xs px-4">
                             <TextField
                                 name="name"
                                 label="이름"
@@ -69,7 +68,14 @@ export default function SignUpForm() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={touched.name && Boolean(errors.name)}
-                                helperText={touched.name && errors.name}
+                                helperText={
+                                    touched.name && errors.name
+                                        ? errors.name
+                                        : ' '
+                                }
+                                FormHelperTextProps={{
+                                    sx: { minHeight: 28, m: 0.5 },
+                                }}
                                 autoComplete="name"
                                 fullWidth
                                 size="small"
@@ -82,7 +88,14 @@ export default function SignUpForm() {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 error={touched.email && Boolean(errors.email)}
-                                helperText={touched.email && errors.email}
+                                helperText={
+                                    touched.email && errors.email
+                                        ? errors.email
+                                        : ' '
+                                }
+                                FormHelperTextProps={{
+                                    sx: { minHeight: 28, m: 0.5 },
+                                }}
                                 autoComplete="email"
                                 fullWidth
                                 size="small"
@@ -97,34 +110,42 @@ export default function SignUpForm() {
                                 error={
                                     touched.password && Boolean(errors.password)
                                 }
-                                helperText={touched.password && errors.password}
+                                helperText={
+                                    touched.password && errors.password
+                                        ? errors.password
+                                        : ' '
+                                }
+                                FormHelperTextProps={{
+                                    sx: { minHeight: 28, m: 0.5 },
+                                }}
                                 autoComplete="password"
                                 fullWidth
                                 size="small"
                             />
-                        </Box>
-                        <div className="flex justify-between mt-8">
-                            <Link href={'/'}>
+                            <div className="flex justify-between mt-2">
+                                <Link href={'/'}>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        type="submit"
+                                        color="inherit"
+                                    >
+                                        취소
+                                    </Button>
+                                </Link>
                                 <Button
-                                    variant="outlined"
+                                    variant="contained"
                                     size="small"
                                     type="submit"
+                                    disabled={!isValid || !dirty}
                                 >
-                                    취소
+                                    가입하기
                                 </Button>
-                            </Link>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                type="submit"
-                                disabled={!isValid || !dirty}
-                            >
-                                가입하기
-                            </Button>
-                        </div>
-                    </Form>
-                )}
-            </Formik>
+                            </div>
+                        </Form>
+                    )}
+                </Formik>
+            </div>
         </Container>
     )
 }

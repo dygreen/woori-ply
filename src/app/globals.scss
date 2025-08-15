@@ -6,6 +6,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'FlightSans-Bold';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2410-1@1.0/FlightSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
 * {
   font-family: 'Noto Sans KR';
   box-sizing: border-box;
@@ -23,6 +30,11 @@ body {
   sans-serif;
   font-weight: 100;
   overflow-x: hidden;
+  background-image: linear-gradient(to top, #96fbc4 0%, #f9f586 100%);
+}
+
+h1 {
+  font-family: 'FlightSans-Bold', 'Roboto';
 }
 
 a {

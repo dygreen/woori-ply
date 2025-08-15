@@ -9,28 +9,42 @@ export default function LandingPage() {
     const isAuthed = status === 'authenticated'
 
     return (
-        <Container
-            maxWidth="md"
-            fixed
-            className="w-full h-screen flex items-center justify-center text-center"
-        >
-            <main>
-                <h1 className="text-4xl font-bold mb-8">우리플리</h1>
+        <Container maxWidth="md" fixed className="h-full py-4">
+            <main className="flex flex-col items-center justify-center text-center h-full">
+                <h1 className="text-5xl font-bold mb-2">우리플리</h1>
+                <p className="text-md font-normal mb-8">
+                    실시간 플레이리스트 투표 서비스
+                </p>
 
                 {isAuthed ? (
-                    <>
-                        <div className="space-y-4">방 만들기</div>
-                        <button type="button" onClick={() => signOut()}>
+                    <div className="gap-4 flex">
+                        <Link href={'/'}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                color="inherit"
+                                type="button"
+                            >
+                                방 만들기
+                            </Button>
+                        </Link>
+                        <Button
+                            type="button"
+                            onClick={() => signOut()}
+                            variant="outlined"
+                            size="small"
+                            color="inherit"
+                        >
                             <span>로그아웃</span>
-                        </button>
-                    </>
+                        </Button>
+                    </div>
                 ) : (
                     <div className="gap-4 flex">
                         <Button
                             onClick={() => signIn()}
                             variant="outlined"
                             size="small"
-                            color="secondary"
+                            color="inherit"
                             type="button"
                         >
                             로그인
@@ -39,7 +53,7 @@ export default function LandingPage() {
                             <Button
                                 variant="outlined"
                                 size="small"
-                                color="secondary"
+                                color="inherit"
                                 type="button"
                             >
                                 회원가입
