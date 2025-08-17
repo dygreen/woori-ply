@@ -6,11 +6,11 @@ export default async function RoomLayout({
     params,
 }: {
     children: React.ReactNode
-    params: { roomId: string }
+    params: Promise<{ roomId: string }>
 }) {
-    const response = await fetch(
-        `${process.env.AUTH_URL}/api/rooms/${params.roomId}`,
-    )
+    const { roomId } = await params
+    const response = await fetch(`${process.env.AUTH_URL}/api/rooms/${roomId}`)
+
     if (response.status === 404) notFound()
     if (!response.ok) notFound()
 
