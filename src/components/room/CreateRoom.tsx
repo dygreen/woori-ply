@@ -12,6 +12,7 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import { useAlert } from '@/components/providers/AlertProvider'
+import { useRouter } from 'next/navigation'
 
 interface CreateRoomProps {
     open: boolean
@@ -20,10 +21,12 @@ interface CreateRoomProps {
 
 export default function CreateRoom({ open, onClose }: CreateRoomProps) {
     const [createdUrl, setCreatedUrl] = useState<string | null>(null)
+    const [roomId, setRoomId] = useState<string | null>(null)
     const [loading, setLoading] = useState<boolean>(false)
     const [maxSongs, setMaxSongs] = useState<number | null>(null)
 
     const { showSuccess, showError } = useAlert()
+    const router = useRouter()
 
     const handleCreateRoom = async () => {
         try {
@@ -39,6 +42,7 @@ export default function CreateRoom({ open, onClose }: CreateRoomProps) {
 
             if (response.status === 201) {
                 setCreatedUrl(data.url)
+                setRoomId(data.roomId)
                 showSuccess('방 생성이 완료되었습니다.')
             } else if (response.status === 401) {
                 showError(data.message)
@@ -56,6 +60,10 @@ export default function CreateRoom({ open, onClose }: CreateRoomProps) {
         showSuccess('URL이 복사되었습니다!', {
             autoHideDuration: 3000,
         })
+    }
+
+    const navigateToRoom = async () => {
+        router.push(`/rooms/${roomId}`)
     }
 
     return (
@@ -106,6 +114,9 @@ export default function CreateRoom({ open, onClose }: CreateRoomProps) {
                         </code>
                         <Button onClick={copyUrl} sx={{ mt: 1 }}>
                             URL 복사
+                        </Button>
+                        <Button onClick={navigateToRoom} sx={{ mt: 1 }}>
+                            방으로 이동
                         </Button>
                     </div>
                 )}
