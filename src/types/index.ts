@@ -1,0 +1,18 @@
+import { ObjectId } from 'mongodb'
+
+export type User = {
+    name: string
+    email: string
+    password: string
+    createAt?: Date
+    updateAt?: Date
+}
+
+export type Room = {
+    _id: ObjectId
+    roomId: string
+    ownerId: string
+    maxSongs: number
+    createdAt: Date
+    status: 'open' | 'closed'
+}

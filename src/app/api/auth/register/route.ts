@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/server/db'
 import { SignupSchema, SignUpInput } from '@/lib/validation/auth'
 import { hashPassword } from '@/lib/crypto/hash'
+import { User } from '@/types'
 
 export async function POST(req: NextRequest) {
     try {
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
         })) as SignUpInput
 
         const database = await db()
-        const users = database.collection('user_cred')
+        const users = database.collection<User>('user_cred')
 
         // 2) 이메일 유니크 인덱스 보장(최초 1회)
         await users.createIndex({ email: 1 }, { unique: true })

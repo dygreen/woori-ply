@@ -16,6 +16,7 @@
     "bcryptjs": "^3.0.2",
     "formik": "^2.4.6",
     "mongodb": "^6.18.0",
+    "nanoid": "^5.1.5",
     "next": "15.4.6",
     "next-auth": "^4.24.11",
     "prettier": "^3.6.2",

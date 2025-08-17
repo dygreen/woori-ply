@@ -4,7 +4,7 @@ import { Form, Formik } from 'formik'
 import { SignupSchema } from '@/lib/validation/auth'
 import { TextField, Container, Button } from '@mui/material'
 import Link from 'next/link'
-import { User } from '@/types/user'
+import { User } from '@/types'
 import { useRouter } from 'next/navigation'
 import { useAlert } from '@/components/providers/AlertProvider'
 
