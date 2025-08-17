@@ -123,7 +123,7 @@ export default function SignUpForm() {
                                 size="small"
                             />
                             <div className="flex justify-between mt-2">
-                                <Link href={'/'}>
+                                <Link href="/">
                                     <Button
                                         variant="outlined"
                                         size="small"
