@@ -14,14 +14,14 @@
 
 ## 🛠 기술 스택
 
-| 분류        | 기술 |
-|-------------|------|
-| **Frontend** | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS |
-| **Auth**     | NextAuth.js (GitHub OAuth, Credentials) |
-| **Backend**  | Next.js API Routes, MongoDB Atlas |
-| **Database** | MongoDB (Mongoose) |
-| **Deploy**   | Vercel |
-| **Etc.**     | ESLint, Prettier |
+| 분류        | 기술                                                               |
+|-------------|------------------------------------------------------------------|
+| **Frontend** | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, MUI |
+| **Auth**     | NextAuth.js (GitHub OAuth, Credentials)                          |
+| **Backend**  | Next.js API Routes, MongoDB Atlas                                |
+| **Database** | MongoDB (Mongoose)                                               |
+| **Deploy**   | Vercel                                                           |
+| **Etc.**     | ESLint, Prettier                                                 |
 
 ---
 
@@ -31,5 +31,14 @@
     - GitHub 계정으로 간편 로그인 (로그인 정보 DB 저장)
     - NextAuth Credentials 로그인 지원
 
+- **방 생성 & 참여**
+    - 방을 만들고 초대 링크로 다른 사용자를 초대 가능
+    - 로그인하지 않은 사용자는 방 접속 시 메인으로 리다이렉트 → 로그인 후 원래 방으로 재접속 처리
 
-    
+- **에러 처리**
+    - 존재하지 않는 방 접근 시 `404 Not Found` 처리
+    - 미인증 사용자는 API 요청 시 `401 Unauthorized` 응답 반환
+
+- **UI/UX**
+    - Tailwind CSS + MUI 조합으로 직관적인 인터페이스 구현
+    - 폼 검증은 Formik + Yup 적용
