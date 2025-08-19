@@ -107,6 +107,15 @@ const handler = NextAuth({
             }
             return session
         },
+        async redirect({ url, baseUrl }) {
+            // 상대경로면 baseUrl에 붙여 허용
+            if (url.startsWith('/')) return `${baseUrl}${url}`
+            // 같은 오리진이면 허용
+            const u = new URL(url)
+            if (u.origin === baseUrl) return url
+            // 그 외에는 홈으로
+            return baseUrl
+        },
     },
 })
 

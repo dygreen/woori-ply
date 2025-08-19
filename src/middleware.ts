@@ -10,7 +10,7 @@ export async function middleware(req: NextRequest) {
     if (!token) {
         const loginUrl = new URL('/', req.url)
         loginUrl.searchParams.set(
-            'next',
+            'callbackUrl',
             req.nextUrl.pathname + req.nextUrl.search,
         )
         return NextResponse.redirect(loginUrl)

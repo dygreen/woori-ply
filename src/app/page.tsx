@@ -3,14 +3,22 @@
 import { signIn, signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { Button, Container } from '@mui/material'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CreateRoom from '@/components/room/CreateRoom'
+import AuthRequiredModal from '@/components/auth/AuthRequiredModal'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LandingPage() {
     const { status } = useSession()
     const isAuthed = status === 'authenticated'
 
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const callbackUrl = searchParams.get('callbackUrl') || null
+
     const [openCreateRoomModal, setOpenCreateRoomModal] =
+        useState<boolean>(false)
+    const [openAuthRequiredModal, setOpenAuthRequiredModal] =
         useState<boolean>(false)
 
     const handleOpenCreateRoomModal = () => {
@@ -20,6 +28,31 @@ export default function LandingPage() {
     const handleCloseCreateRoomModal = () => {
         setOpenCreateRoomModal(false)
     }
+
+    const handleOpenAuthRequiredModal = () => {
+        setOpenAuthRequiredModal(true)
+    }
+
+    const handleCloseAuthRequiredModal = () => {
+        setOpenAuthRequiredModal(false)
+    }
+
+    const handleRemoveParam = () => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('callbackUrl')
+        router.replace(`?${params.toString()}`, { scroll: false })
+    }
+
+    useEffect(() => {
+        if (status === 'loading') return
+        if (callbackUrl) {
+            if (!isAuthed) {
+                handleOpenAuthRequiredModal()
+            } else {
+                handleRemoveParam()
+            }
+        }
+    }, [callbackUrl, status])
 
     return (
         <>
@@ -82,6 +115,12 @@ export default function LandingPage() {
                 <CreateRoom
                     open={openCreateRoomModal}
                     onClose={handleCloseCreateRoomModal}
+                />
+            )}
+            {openAuthRequiredModal && (
+                <AuthRequiredModal
+                    open={openAuthRequiredModal}
+                    onClose={handleCloseAuthRequiredModal}
                 />
             )}
         </>
