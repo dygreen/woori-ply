@@ -44,6 +44,6 @@ export async function POST(req: NextRequest) {
         maxSongs,
     })
 
-    const url = `${process.env.AUTH_URL}/room/${room.roomId}`
+    const url = `${process.env.AUTH_URL}/rooms/${room.roomId}`
     return NextResponse.json({ roomId: room.roomId, url }, { status: 201 })
 }
