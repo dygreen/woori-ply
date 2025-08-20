@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb'
 
+type RoomStatus = 'open' | 'closed'
+
 export type User = {
     name: string
     email: string
@@ -14,5 +16,6 @@ export type Room = {
     ownerId: string
     maxSongs: number
     createdAt: Date
-    status: 'open' | 'closed'
+    status: RoomStatus
+    closedAt?: Date
 }

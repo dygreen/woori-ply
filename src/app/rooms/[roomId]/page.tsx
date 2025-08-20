@@ -3,17 +3,42 @@
 import { notFound, useParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { createAblyRealtime } from '@/lib/server/ablyClient'
+import { useSession } from 'next-auth/react'
+import { useAlert } from '@/components/providers/AlertProvider'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
+    const { data: session } = useSession()
+
     const [members, setMembers] = useState<string[]>([])
     const [connected, setConnected] = useState<boolean>(false)
+
+    const { showError } = useAlert()
 
     const rt = useMemo(() => createAblyRealtime(), [])
     const channel = useMemo(
         () => rt.channels.get(`room:${roomId}`),
         [rt, roomId],
     )
+
+    const fetchCloseRoom = async () => {
+        try {
+            const response = await fetch(`/api/rooms/${roomId}/close`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: session?.user?.email }),
+            })
+            const data = await response.json()
+
+            if (response.status === 404) {
+                showError(data.message)
+            }
+        } catch (err) {
+            console.error(err)
+        }
+    }
 
     useEffect(() => {
         let mounted = true
@@ -48,13 +73,14 @@ export default function RoomPage() {
         rt.connect()
 
         return () => {
+            fetchCloseRoom()
             mounted = false
             channel.presence.leave().catch(() => {})
             channel.presence.unsubscribe()
             channel.unsubscribe()
             rt.close()
         }
-    }, [channel, rt])
+    }, [channel, rt, fetchCloseRoom])
 
     if (!roomId) return notFound()
 
