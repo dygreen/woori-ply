@@ -102,20 +102,29 @@ export default function CreateRoom({ open, onClose }: CreateRoomProps) {
                             style={{
                                 fontSize: 12,
                                 opacity: 0.8,
-                                marginBottom: 8,
+                                marginBottom: 4,
                             }}
                         >
                             방 접속 URL
                         </div>
                         <code
-                            style={{ display: 'block', wordBreak: 'break-all' }}
+                            className="text-sky-600 underline cursor-pointer"
+                            style={{
+                                display: 'block',
+                                wordBreak: 'break-all',
+                            }}
+                            onClick={copyUrl}
                         >
                             {createdUrl}
                         </code>
-                        <Button onClick={copyUrl} sx={{ mt: 1 }}>
-                            URL 복사
-                        </Button>
-                        <Button onClick={navigateToRoom} sx={{ mt: 1 }}>
+                        <Button
+                            onClick={navigateToRoom}
+                            sx={{ mt: 2 }}
+                            variant="outlined"
+                            size="small"
+                            color="inherit"
+                            type="button"
+                        >
                             방으로 이동
                         </Button>
                     </div>
