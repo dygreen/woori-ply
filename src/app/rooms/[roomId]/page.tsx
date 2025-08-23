@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { createAblyRealtime } from '@/lib/server/ablyClient'
 import { useSession } from 'next-auth/react'
 import { useAlert } from '@/components/providers/AlertProvider'
+import SpotifyPickModal from '@/components/spotify/SpotifyPickModal'
+import { SpotifyTrack } from '@/lib/server/spotify'
+import { Button } from '@mui/material'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -12,6 +15,9 @@ export default function RoomPage() {
 
     const [members, setMembers] = useState<string[]>([])
     const [connected, setConnected] = useState<boolean>(false)
+
+    const [modalOpen, setModalOpen] = useState(false)
+    const [selected, setSelected] = useState<SpotifyTrack | null>(null)
 
     const { showError } = useAlert()
 
@@ -38,6 +44,19 @@ export default function RoomPage() {
         } catch (err) {
             console.error(err)
         }
+    }
+
+    const handleSelect = async (track: SpotifyTrack) => {
+        setSelected(track)
+        setModalOpen(false)
+    }
+
+    const handleOpenSpotifyModal = () => {
+        setModalOpen(true)
+    }
+
+    const handleCloseSpotifyModal = () => {
+        setModalOpen(false)
     }
 
     useEffect(() => {
@@ -80,7 +99,7 @@ export default function RoomPage() {
             channel.unsubscribe()
             rt.close()
         }
-    }, [channel, rt, fetchCloseRoom])
+    }, [channel, rt])
 
     if (!roomId) return notFound()
 
@@ -102,6 +121,12 @@ export default function RoomPage() {
             >
                 방에 알림 보내기
             </button>
+            <Button onClick={handleOpenSpotifyModal}>모달 오픈 테스트</Button>
+            <SpotifyPickModal
+                open={modalOpen}
+                onClose={handleCloseSpotifyModal}
+                onSelect={handleSelect}
+            />
         </main>
     )
 }
