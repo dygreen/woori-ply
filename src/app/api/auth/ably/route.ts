@@ -1,10 +1,10 @@
-import { getServerSession } from 'next-auth'
+import { getServerSession, Session } from 'next-auth'
 import { GET as GET_SESSION } from '@/app/api/auth/[...nextauth]/route'
 import { NextResponse } from 'next/server'
 import * as Ably from 'ably'
 
 export async function GET() {
-    const session: any = await getServerSession(GET_SESSION)
+    const session: Session | null = await getServerSession(GET_SESSION)
     if (!session?.user?.name)
         return NextResponse.json(
             { message: '로그인이 필요한 서비스입니다.' },

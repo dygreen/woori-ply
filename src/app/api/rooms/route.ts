@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { getServerSession, Session } from 'next-auth'
 import { GET } from '@/app/api/auth/[...nextauth]/route'
 import { customAlphabet } from 'nanoid'
 import { Room } from '@/types'
@@ -25,7 +25,7 @@ const insertRoom = async (doc: Omit<Room, '_id' | 'createdAt' | 'status'>) => {
 }
 
 export async function POST(req: NextRequest) {
-    const session: any = await getServerSession(GET)
+    const session: Session | null = await getServerSession(GET)
     // 로그인 여부 체크
     if (!session?.user?.email) {
         return NextResponse.json(

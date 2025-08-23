@@ -1,10 +1,8 @@
-@import "tailwindcss";
-@import '@/styles/color';
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@use "@/styles/color" as *;
 
 @font-face {
   font-family: 'FlightSans-Bold';
