@@ -1,7 +1,7 @@
 import './globals.scss'
 import type { Metadata } from 'next'
 import SessionProvider from '@/components/providers/SessionProvider'
-import React from 'react'
+import React, { Suspense } from 'react'
 import { AlertProvider } from '@/components/providers/AlertProvider'
 
 export const metadata: Metadata = {
@@ -17,9 +17,11 @@ export default function RootLayout({
     return (
         <html lang="ko">
             <body>
-                <SessionProvider>
-                    <AlertProvider>{children}</AlertProvider>
-                </SessionProvider>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <SessionProvider>
+                        <AlertProvider>{children}</AlertProvider>
+                    </SessionProvider>
+                </Suspense>
             </body>
         </html>
     )
