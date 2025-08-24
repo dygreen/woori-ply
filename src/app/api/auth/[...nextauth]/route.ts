@@ -1,4 +1,4 @@
-import NextAuth from 'next-auth'
+import NextAuth, { type NextAuthOptions } from 'next-auth'
 import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { MongoDBAdapter } from '@auth/mongodb-adapter'
@@ -15,7 +15,7 @@ interface UserCred extends Document {
 const client = new MongoClient(process.env.MONGODB_URI!)
 const clientPromise = client.connect()
 
-const handler = NextAuth({
+const authOptions: NextAuthOptions = {
     providers: [
         GitHubProvider({
             clientId: process.env.GITHUB_ID!,
@@ -117,6 +117,8 @@ const handler = NextAuth({
             return baseUrl
         },
     },
-})
+}
 
-export { handler as GET_SESSION, handler as POST_SESSION }
+const handler = NextAuth(authOptions)
+
+export { handler as GET, handler as POST }
