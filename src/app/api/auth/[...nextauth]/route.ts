@@ -45,10 +45,16 @@ const authOptions: NextAuthOptions = {
                     .collection<UserCred>('user_cred')
                     .findOne({ email })
 
-                if (!user) return null
+                if (!user) {
+                    alert('이메일 주소가 일치하지 않습니다.')
+                    return null
+                }
 
                 const ok = await bcrypt.compare(password, user.password)
-                if (!ok) return null
+                if (!ok) {
+                    alert('비밀번호가 일치하지 않습니다.')
+                    return null
+                }
 
                 return {
                     ...user,
