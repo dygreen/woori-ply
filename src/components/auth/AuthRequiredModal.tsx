@@ -2,6 +2,7 @@
 
 import { Box, Button, Modal, Paper, Typography } from '@mui/material'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
 
 interface AuthRequiredModalProps {
     open: boolean
@@ -38,16 +39,29 @@ export default function AuthRequiredModal({
                     variant="body2"
                     sx={{ mb: 3, color: 'text.secondary' }}
                 >
-                    로그인 후 이용해 주세요.
+                    로그인 / 회원가입 후 이용해 주세요.
                 </Typography>
-                <Button
-                    variant="contained"
-                    color="inherit"
-                    fullWidth
-                    onClick={() => signIn('', { callbackUrl })}
-                >
-                    로그인
-                </Button>
+                <div className="gap-4 flex">
+                    <Button
+                        variant="contained"
+                        color="inherit"
+                        fullWidth
+                        type="button"
+                        onClick={() => signIn('', { callbackUrl })}
+                    >
+                        로그인
+                    </Button>
+                    <Link href={'/register'}>
+                        <Button
+                            variant="outlined"
+                            color="inherit"
+                            type="button"
+                            fullWidth
+                        >
+                            회원가입
+                        </Button>
+                    </Link>
+                </div>
             </Box>
         </Modal>
     )
