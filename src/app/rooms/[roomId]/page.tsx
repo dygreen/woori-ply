@@ -1,6 +1,6 @@
 'use client'
 
-import { notFound, useParams } from 'next/navigation'
+import { notFound, useParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { createAblyRealtime } from '@/lib/server/ablyClient'
 import { useSession } from 'next-auth/react'
@@ -12,6 +12,7 @@ import { Button } from '@mui/material'
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
     const { data: session } = useSession()
+    const router = useRouter()
 
     const [members, setMembers] = useState<string[]>([])
     const [connected, setConnected] = useState<boolean>(false)
@@ -19,7 +20,7 @@ export default function RoomPage() {
     const [modalOpen, setModalOpen] = useState(false)
     const [selected, setSelected] = useState<SpotifyTrack | null>(null)
 
-    const { showError } = useAlert()
+    const { showSuccess, showError } = useAlert()
 
     const rt = useMemo(() => createAblyRealtime(), [])
     const channel = useMemo(
@@ -27,20 +28,18 @@ export default function RoomPage() {
         [rt, roomId],
     )
 
-    const fetchCloseRoom = async () => {
+    const fetchJoinRoom = async () => {
         try {
-            const response = await fetch(`/api/rooms/${roomId}/close`, {
+            const response = await fetch(`/api/rooms/${roomId}/join`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ userId: session?.user?.email }),
             })
             const data = await response.json()
 
-            if (response.status === 404) {
-                showError(data.message)
-            }
+            if (!response.ok) showError(data.message)
+            else showSuccess('방에 입장하셨습니다.')
         } catch (err) {
             console.error(err)
         }
@@ -92,7 +91,6 @@ export default function RoomPage() {
         rt.connect()
 
         return () => {
-            fetchCloseRoom()
             mounted = false
             channel.presence.leave().catch(() => {})
             channel.presence.unsubscribe()
@@ -100,6 +98,69 @@ export default function RoomPage() {
             rt.close()
         }
     }, [channel, rt])
+
+    useEffect(() => {
+        if (!roomId) return
+
+        const sendLeave = () => {
+            try {
+                // 우선 sendBeacon 시도
+                const ok = navigator.sendBeacon?.(
+                    `/api/rooms/${roomId}/leave`,
+                    new Blob([JSON.stringify({})], {
+                        type: 'application/json',
+                    }),
+                )
+                if (!ok) {
+                    // 일부 브라우저/환경은 false를 리턴하거나 미지원 → keepalive fetch 백업
+                    fetch(`/api/rooms/${roomId}/leave`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({}),
+                        keepalive: true,
+                        cache: 'no-store',
+                    }).catch(() => {})
+                }
+            } catch {
+                // 최후 백업
+                fetch(`/api/rooms/${roomId}/leave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    keepalive: true,
+                    cache: 'no-store',
+                }).catch(() => {})
+            }
+        }
+
+        // 탭 닫기/네비게이션/백포워드 캐시 진입 모두 커버용
+        window.addEventListener('pagehide', sendLeave)
+        window.addEventListener('beforeunload', sendLeave)
+        return () => {
+            window.removeEventListener('pagehide', sendLeave)
+            window.removeEventListener('beforeunload', sendLeave)
+        }
+    }, [roomId])
+
+    useEffect(() => {
+        if (!connected || !roomId || !session?.user?.email) return
+        fetchJoinRoom()
+    }, [connected, roomId, session?.user?.email])
+
+    useEffect(() => {
+        // member가 없을 시 방 closed
+        const onRoomClosed = () => {
+            showError('방이 종료되었습니다.')
+            setConnected(false)
+            router.replace('/')
+        }
+
+        channel.subscribe('roomClosed', onRoomClosed)
+
+        return () => {
+            channel.unsubscribe('roomClosed', onRoomClosed)
+        }
+    }, [channel])
 
     if (!roomId) return notFound()
 

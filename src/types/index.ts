@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb'
 
-type RoomStatus = 'open' | 'closed'
+export type RoomStatus = 'open' | 'closed'
+export type RoomRole = 'host' | 'guest'
 
 export type User = {
     name: string
@@ -18,4 +19,15 @@ export type Room = {
     createdAt: Date
     status: RoomStatus
     closedAt?: Date
+}
+
+export type RoomMember = {
+    _id: ObjectId
+    roomId: string
+    userId: string
+    role: RoomRole
+    joinedAt: Date
+    lastSeenAt: Date
+    leftAt: Date
+    active: boolean
 }
