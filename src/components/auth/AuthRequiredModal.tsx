@@ -1,21 +1,19 @@
 'use client'
 
 import { Box, Button, Modal, Paper, Typography } from '@mui/material'
-import { useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 
 interface AuthRequiredModalProps {
     open: boolean
     onClose: () => void
+    callbackUrl?: string
 }
 
 export default function AuthRequiredModal({
     open,
     onClose,
+    callbackUrl,
 }: AuthRequiredModalProps) {
-    const searchParams = useSearchParams()
-    const callbackUrl = searchParams.get('callbackUrl') || '/'
-
     return (
         <Modal open={open} onClose={onClose}>
             <Box

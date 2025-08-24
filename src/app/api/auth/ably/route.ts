@@ -1,5 +1,5 @@
 import { getServerSession, Session } from 'next-auth'
-import { GET as GET_SESSION } from '@/app/api/auth/[...nextauth]/route'
+import { GET_SESSION } from '@/app/api/auth/[...nextauth]/route'
 import { NextResponse } from 'next/server'
 import * as Ably from 'ably'
 
