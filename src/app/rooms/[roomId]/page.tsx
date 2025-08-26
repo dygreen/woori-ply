@@ -8,6 +8,7 @@ import SpotifyPickModal from '@/components/spotify/SpotifyPickModal'
 import { SpotifyTrack } from '@/lib/server/spotify'
 import { Button } from '@mui/material'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
+import RoomChat from '@/components/chat/RoomChat'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -115,6 +116,8 @@ export default function RoomPage() {
             >
                 방에 알림 보내기
             </button>
+
+            <RoomChat roomId={roomId} />
 
             <Button onClick={() => setModalOpen(true)}>모달 오픈 테스트</Button>
             <SpotifyPickModal

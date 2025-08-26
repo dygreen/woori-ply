@@ -31,3 +31,19 @@ export type RoomMember = {
     leftAt: Date
     active: boolean
 }
+
+export type ChatMessage = {
+    id: string
+    roomId: string
+    userId: string
+    userName?: string
+    text: string
+    createdAt: number
+    type?: 'text' | 'system'
+}
+
+export type PresenceMember = {
+    clientId: string
+    name?: string
+    joinedAt?: number
+}
