@@ -13,7 +13,7 @@ export default function RoomChat({ roomId }: { roomId: string }) {
         roomId,
     })
 
-    const [text, setText] = useState('')
+    const [text, setText] = useState<string>('')
     const listRef = useRef<HTMLDivElement>(null)
 
     const handleSend = async () => {
@@ -81,7 +81,12 @@ export default function RoomChat({ roomId }: { roomId: string }) {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     onKeyDown={(e) => {
+                        const composing =
+                            (e.nativeEvent as any).isComposing ||
+                            (e as any).keyCode === 229
+
                         if (e.key === 'Enter' && !e.shiftKey) {
+                            if (composing) return
                             e.preventDefault()
                             handleSend()
                         }
