@@ -5,7 +5,10 @@ import { db } from '@/lib/server/db'
 import { ObjectId } from 'mongodb'
 import { Room, RoomMember, RoomRole } from '@/types'
 
-export async function POST(_req: NextRequest, context: any) {
+export async function POST(
+    _req: NextRequest,
+    { params }: { params: Promise<{ roomId: string }> },
+) {
     const session: any = await getServerSession(authOptions)
     const email = session?.user?.email
     if (!email)
@@ -14,7 +17,7 @@ export async function POST(_req: NextRequest, context: any) {
             { status: 401 },
         )
 
-    const { roomId } = context.params
+    const { roomId } = await params
     const database = await db()
     const rooms = database.collection<Room>('rooms')
     const members = database.collection<RoomMember>('room_members')

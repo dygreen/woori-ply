@@ -8,8 +8,11 @@ const findRoomByRoomId = async (roomId: string) => {
     return rooms.findOne({ roomId })
 }
 
-export async function GET(_: NextRequest, context: any) {
-    const { roomId } = context.params
+export async function GET(
+    _: NextRequest,
+    { params }: { params: Promise<{ roomId: string }> },
+) {
+    const { roomId } = await params
     const room = await findRoomByRoomId(roomId)
     if (!room)
         return NextResponse.json(
