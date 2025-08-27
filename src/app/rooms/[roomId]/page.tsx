@@ -9,6 +9,7 @@ import { SpotifyTrack } from '@/lib/server/spotify'
 import { Button } from '@mui/material'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import RoomChat from '@/components/chat/RoomChat'
+import s from '@/app/rooms/[roomId]/room.module.scss'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -100,31 +101,50 @@ export default function RoomPage() {
     if (!roomId) return notFound()
 
     return (
-        <main style={{ padding: 24 }}>
-            <h1>Room: {roomId}</h1>
-            <p>연결 상태: {connected ? 'connected' : 'connecting...'}</p>
-            <h3>참여자({members.length})</h3>
-            <ul>
-                {members.map((m) => (
-                    <li key={m.clientId}>{m.clientId}</li>
-                ))}
-            </ul>
-
-            <button
-                onClick={() => publish('announce', { text: 'Hello room!' })}
-                disabled={!connected}
-            >
-                방에 알림 보내기
-            </button>
-
-            <RoomChat roomId={roomId} />
-
-            <Button onClick={() => setModalOpen(true)}>모달 오픈 테스트</Button>
-            <SpotifyPickModal
-                open={modalOpen}
-                onClose={() => setModalOpen(false)}
-                onSelect={handleSelect}
-            />
-        </main>
+        <div className={s.room_layout}>
+            <header>우리플리</header>
+            <div className={s.room_content}>
+                <main>
+                    <section className={s.album_section}>
+                        <div className={s.album_wrapper}>앨범 이미지</div>
+                        <div className={s.detail_wrapper}>컨텐츠</div>
+                    </section>
+                    <section className={s.table_section}>테이블</section>
+                    {/* TODO : 시작 스타일링 */}
+                    {/*<section className={s.start_section}>*/}
+                    {/*    <button>시작!</button>*/}
+                    {/*</section>*/}
+                </main>
+                <aside>
+                    <RoomChat roomId={roomId} />
+                </aside>
+            </div>
+        </div>
+        // <main style={{ padding: 24 }}>
+        //     <h1>Room: {roomId}</h1>
+        //     <p>연결 상태: {connected ? 'connected' : 'connecting...'}</p>
+        //     <h3>참여자({members.length})</h3>
+        //     <ul>
+        //         {members.map((m) => (
+        //             <li key={m.clientId}>{m.clientId}</li>
+        //         ))}
+        //     </ul>
+        //
+        //     <button
+        //         onClick={() => publish('announce', { text: 'Hello room!' })}
+        //         disabled={!connected}
+        //     >
+        //         방에 알림 보내기
+        //     </button>
+        //
+        //     <RoomChat roomId={roomId} />
+        //
+        //     <Button onClick={() => setModalOpen(true)}>모달 오픈 테스트</Button>
+        //     <SpotifyPickModal
+        //         open={modalOpen}
+        //         onClose={() => setModalOpen(false)}
+        //         onSelect={handleSelect}
+        //     />
+        // </main>
     )
 }
