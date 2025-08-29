@@ -2,6 +2,7 @@ import { ObjectId } from 'mongodb'
 
 export type RoomStatus = 'open' | 'closed'
 export type RoomRole = 'host' | 'guest'
+export type RoomState = 'IDLE' | 'PICKING' | 'VOTING' | 'APPLYING' | 'FINISHED'
 
 export type User = {
     name: string
@@ -15,9 +16,24 @@ export type Room = {
     _id: ObjectId
     roomId: string
     ownerId: string
-    maxSongs: number
-    createdAt: Date
     status: RoomStatus
+    state: RoomState
+    maxSongs: number
+    playlist: { trackId: string; pickerId: string; addedAt: number }[]
+    memberOrder: string[]
+    turnIndex: number
+    current?: {
+        pickerId?: string
+        track?: {
+            id: string
+            name: string
+            artists: string[]
+            image?: string
+            previewUrl?: string
+        }
+        vote?: { endsAt: number; up: string[]; down: string[] }
+    }
+    createdAt: Date
     closedAt?: Date
 }
 

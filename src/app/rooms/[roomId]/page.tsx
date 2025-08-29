@@ -10,6 +10,8 @@ import { Button } from '@mui/material'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import RoomChat from '@/components/chat/RoomChat'
 import s from '@/app/rooms/[roomId]/room.module.scss'
+import { RoomRole } from '@/types'
+import RoomControls from '@/components/room/RoomControls'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -19,6 +21,7 @@ export default function RoomPage() {
 
     const { connected, members, publish, subscribe } = useRoomChannel(roomId)
 
+    const [userRole, setUserRole] = useState<RoomRole | null>(null)
     const [modalOpen, setModalOpen] = useState(false)
     const [selected, setSelected] = useState<SpotifyTrack | null>(null)
 
@@ -33,7 +36,10 @@ export default function RoomPage() {
                 })
                 const data = await response.json()
                 if (!response.ok) showError(data.message)
-                else showSuccess('방에 입장하셨습니다.')
+                else {
+                    showSuccess('방에 입장하셨습니다.')
+                    setUserRole(data.role)
+                }
             } catch (e) {
                 console.error(e)
             }
@@ -98,28 +104,46 @@ export default function RoomPage() {
         setModalOpen(false)
     }
 
+    const handleModalOpen = () => {
+        setModalOpen(true)
+    }
+
     if (!roomId) return notFound()
 
     return (
-        <div className={s.room_layout}>
-            <header>우리플리</header>
-            <div className={s.room_content}>
-                <main>
-                    <section className={s.album_section}>
-                        <div className={s.album_wrapper}>앨범 이미지</div>
-                        <div className={s.detail_wrapper}>컨텐츠</div>
-                    </section>
-                    <section className={s.table_section}>테이블</section>
-                    {/* TODO : 시작 스타일링 */}
-                    {/*<section className={s.start_section}>*/}
-                    {/*    <button>시작!</button>*/}
-                    {/*</section>*/}
-                </main>
-                <aside>
-                    <RoomChat roomId={roomId} />
-                </aside>
+        <>
+            <div className={s.room_layout}>
+                <header>우리플리</header>
+                <div className={s.room_content}>
+                    <main>
+                        {/*<section className={s.album_section}>*/}
+                        {/*    <div className={s.album_wrapper}>앨범 이미지</div>*/}
+                        {/*    <div className={s.detail_wrapper}>컨텐츠</div>*/}
+                        {/*</section>*/}
+                        {/*<section className={s.table_section}>테이블</section>*/}
+                        {/* TODO : 시작 스타일링 */}
+                        <section className={s.start_section}>
+                            <RoomControls
+                                roomId={roomId}
+                                isHost={userRole === 'host'}
+                                onModalOpen={handleModalOpen}
+                            />
+                        </section>
+                    </main>
+                    <aside>
+                        <RoomChat roomId={roomId} />
+                    </aside>
+                </div>
+                {/*<Button onClick={() => setModalOpen(true)}>모달 오픈 테스트</Button>*/}
             </div>
-        </div>
+            {modalOpen && (
+                <SpotifyPickModal
+                    open={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    onSelect={handleSelect}
+                />
+            )}
+        </>
         // <main style={{ padding: 24 }}>
         //     <h1>Room: {roomId}</h1>
         //     <p>연결 상태: {connected ? 'connected' : 'connecting...'}</p>

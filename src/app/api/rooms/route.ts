@@ -11,23 +11,11 @@ const nanoid = customAlphabet(
     12,
 )
 
-const insertRoom = async (doc: Omit<Room, '_id' | 'createdAt' | 'status'>) => {
-    const database = await db()
-    const rooms = database.collection<Room>('rooms')
-    const toInsert: Room = {
-        ...doc,
-        _id: new ObjectId(),
-        createdAt: new Date(),
-        status: 'open',
-    }
-    await rooms.insertOne(toInsert)
-    return toInsert
-}
-
 export async function POST(req: NextRequest) {
     const session: Session | null = await getServerSession(authOptions)
+    const userId = session?.user?.email
     // 로그인 여부 체크
-    if (!session?.user?.email) {
+    if (!userId) {
         return NextResponse.json(
             {
                 message: '로그인이 필요한 서비스입니다.',
@@ -37,13 +25,37 @@ export async function POST(req: NextRequest) {
     }
 
     const roomId = nanoid()
+    const database = await db()
+    const rooms = database.collection<Room>('rooms')
+    const members = database.collection('room_members')
     const { maxSongs } = await req.json()
-    const room = await insertRoom({
+
+    const now = new Date()
+    const doc: Room = {
+        _id: new ObjectId(),
         roomId,
-        ownerId: session.user.email,
+        ownerId: userId,
+        status: 'open',
+        state: 'IDLE',
         maxSongs,
+        playlist: [],
+        memberOrder: [userId],
+        turnIndex: 0,
+        current: undefined,
+        createdAt: now,
+    }
+
+    await rooms.insertOne(doc)
+    // host를 room_members에 등록
+    await members.insertOne({
+        _id: new ObjectId(),
+        roomId,
+        userId,
+        role: 'host',
+        active: true,
+        joinedAt: now,
     })
 
-    const url = `${process.env.AUTH_URL}/rooms/${room.roomId}`
-    return NextResponse.json({ roomId: room.roomId, url }, { status: 201 })
+    const url = `${process.env.AUTH_URL}/rooms/${roomId}`
+    return NextResponse.json({ roomId, url }, { status: 201 })
 }
