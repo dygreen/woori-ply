@@ -26,12 +26,18 @@ export type Room = {
     pickerName?: string
     current?: {
         pickerId?: string
-        track?: {
+        pickerName?: string
+        track: {
             id: string
             name: string
-            artists: string[]
-            image?: string
-            previewUrl?: string
+            artists: string
+            album: {
+                id: string
+                name: string
+                image: string
+            }
+            durationMs: number
+            previewUrl: string | null
         }
         vote?: { endsAt: number; up: string[]; down: string[] }
     }

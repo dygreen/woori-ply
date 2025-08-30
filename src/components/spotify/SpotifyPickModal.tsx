@@ -6,14 +6,14 @@ import { RoomState } from '@/types'
 
 interface SpotifyPickModalProps {
     open: boolean
-    onSelect: (track: SpotifyTrack) => void
+    onClose: () => void
     roomId: string
     roomState?: RoomState
 }
 
 export default function SpotifyPickModal({
     open,
-    onSelect,
+    onClose,
     roomId,
     roomState,
 }: SpotifyPickModalProps) {
@@ -32,9 +32,7 @@ export default function SpotifyPickModal({
                     idempotencyKey: crypto.randomUUID(),
                 }),
             })
-            if (response.ok) {
-                onSelect(track)
-            }
+            if (response.ok) onClose()
         } catch (e) {
             console.error(e)
         }

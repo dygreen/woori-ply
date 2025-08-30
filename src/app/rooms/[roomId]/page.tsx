@@ -129,7 +129,25 @@ export default function RoomPage() {
             case 'PICKING':
                 return <p>{roomDetail?.pickerName} 님이 곡을 고르는 중...</p>
             default:
-                return null
+                return (
+                    <>
+                        {/*TODO : 앨범, 컨텐츠, 테이블 영역 컴포넌트화 및 재퍼블리싱*/}
+                        <section className={s.album_section}>
+                            <div className={s.album_wrapper}>
+                                <img
+                                    src={
+                                        roomDetail?.current?.track?.album?.image
+                                    }
+                                    alt={
+                                        roomDetail?.current?.track?.album?.name
+                                    }
+                                />
+                            </div>
+                            <div className={s.detail_wrapper}>컨텐츠</div>
+                        </section>
+                        <section className={s.table_section}>테이블</section>
+                    </>
+                )
         }
     }
 
@@ -141,12 +159,6 @@ export default function RoomPage() {
                 <header>우리플리</header>
                 <div className={s.room_content}>
                     <main>
-                        {/*<section className={s.album_section}>*/}
-                        {/*    <div className={s.album_wrapper}>앨범 이미지</div>*/}
-                        {/*    <div className={s.detail_wrapper}>컨텐츠</div>*/}
-                        {/*</section>*/}
-                        {/*<section className={s.table_section}>테이블</section>*/}
-                        {/* TODO : 시작 스타일링 */}
                         <section className={s.start_section}>
                             {renderByRoomState(roomDetail?.state ?? 'IDLE')}
                         </section>
@@ -159,7 +171,7 @@ export default function RoomPage() {
             {modalOpen && (
                 <SpotifyPickModal
                     open={modalOpen}
-                    onSelect={handleSelect}
+                    onClose={() => setModalOpen(false)}
                     roomId={roomId}
                     roomState={roomDetail?.state}
                 />
