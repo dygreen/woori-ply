@@ -6,7 +6,6 @@ import { RoomState } from '@/types'
 
 interface SpotifyPickModalProps {
     open: boolean
-    onClose: () => void
     onSelect: (track: SpotifyTrack) => void
     roomId: string
     roomState?: RoomState
@@ -14,7 +13,6 @@ interface SpotifyPickModalProps {
 
 export default function SpotifyPickModal({
     open,
-    onClose,
     onSelect,
     roomId,
     roomState,
@@ -78,21 +76,12 @@ export default function SpotifyPickModal({
             aria-modal
             role="dialog"
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={onClose}
         >
             <div
                 className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-xl"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="mb-4 flex items-center gap-3">
-                    <h2 className="text-lg font-semibold">노래 선택</h2>
-                    <button
-                        className="ml-auto rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
-                        onClick={onClose}
-                    >
-                        닫기
-                    </button>
-                </div>
+                <h2 className="mb-4 text-lg font-semibold">노래 선택</h2>
 
                 <input
                     autoFocus

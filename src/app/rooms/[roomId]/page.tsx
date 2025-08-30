@@ -159,7 +159,6 @@ export default function RoomPage() {
             {modalOpen && (
                 <SpotifyPickModal
                     open={modalOpen}
-                    onClose={() => setModalOpen(false)}
                     onSelect={handleSelect}
                     roomId={roomId}
                     roomState={roomDetail?.state}
