@@ -127,7 +127,7 @@ export default function RoomPage() {
                     />
                 )
             case 'PICKING':
-                return <p>{roomDetail?.pickerId} 님이 곡을 고르는 중...</p>
+                return <p>{roomDetail?.pickerName} 님이 곡을 고르는 중...</p>
             default:
                 return null
         }

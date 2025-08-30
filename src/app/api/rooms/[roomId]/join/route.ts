@@ -33,7 +33,12 @@ export async function POST(
     await members.updateOne(
         { roomId: roomId, userId: email },
         {
-            $set: { role, lastSeenAt: now, active: true },
+            $set: {
+                role,
+                lastSeenAt: now,
+                active: true,
+                userName: session?.user?.name,
+            },
             $setOnInsert: { _id: new ObjectId(), joinedAt: now },
         },
         { upsert: true },

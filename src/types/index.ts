@@ -23,6 +23,7 @@ export type Room = {
     memberOrder: string[]
     turnIndex: number
     pickerId?: string
+    pickerName?: string
     current?: {
         pickerId?: string
         track?: {

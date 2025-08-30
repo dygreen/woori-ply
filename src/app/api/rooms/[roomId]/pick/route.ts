@@ -39,7 +39,11 @@ export async function POST(
         {
             $set: {
                 state: 'VOTING',
-                current: { track, pickerId: session?.user?.email },
+                current: {
+                    track,
+                    pickerId: session?.user?.email,
+                    pickerName: session?.user?.name,
+                },
                 endsAt,
             },
         },
