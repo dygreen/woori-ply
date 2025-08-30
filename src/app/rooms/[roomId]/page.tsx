@@ -6,28 +6,38 @@ import { useSession } from 'next-auth/react'
 import { useAlert } from '@/components/providers/AlertProvider'
 import SpotifyPickModal from '@/components/spotify/SpotifyPickModal'
 import { SpotifyTrack } from '@/lib/server/spotify'
-import { Button } from '@mui/material'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import RoomChat from '@/components/chat/RoomChat'
 import s from '@/app/rooms/[roomId]/room.module.scss'
-import { RoomRole } from '@/types'
+import { Room, RoomRole, RoomState } from '@/types'
 import RoomStartButton from '@/components/room/RoomStartButton'
+import { useRoomEvents } from '@/lib/client/useRoomEvents'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
     const { data: session } = useSession()
     const router = useRouter()
     const { showSuccess, showError } = useAlert()
-
     const { connected, members, publish, subscribe } = useRoomChannel(roomId)
 
     const [userRole, setUserRole] = useState<RoomRole | null>(null)
+    const [roomDetail, setRoomDetail] = useState<Room | null>(null)
+
     const [modalOpen, setModalOpen] = useState(false)
     const [selected, setSelected] = useState<SpotifyTrack | null>(null)
 
+    const handleSelect = async (track: SpotifyTrack) => {
+        setSelected(track)
+        setModalOpen(false)
+    }
+
+    const handleModalOpen = () => {
+        setModalOpen(true)
+    }
+
     // 방 입장 API
     useEffect(() => {
-        if (!connected || !session?.user?.email) return
+        if (!session?.user?.email) return
         ;(async () => {
             try {
                 const response = await fetch(`/api/rooms/${roomId}/join`, {
@@ -44,16 +54,16 @@ export default function RoomPage() {
                 console.error(e)
             }
         })()
-    }, [connected, session?.user?.email, roomId])
+    }, [session?.user?.email, roomId])
 
-    // announce 구독 (예시)
+    // announce 구독
     useEffect(() => {
         return subscribe('announce', (data) => {
             console.log('announce:', data)
         })
     }, [subscribe])
 
-    // 서버 leave 알림(현 코드 유지)
+    // 서버 leave 알림
     useEffect(() => {
         if (!roomId) return
         const sendLeave = () => {
@@ -99,13 +109,28 @@ export default function RoomPage() {
         })
     }, [subscribe, router, showError])
 
-    const handleSelect = async (track: SpotifyTrack) => {
-        setSelected(track)
-        setModalOpen(false)
-    }
+    useRoomEvents(roomId, (event) => {
+        if (event.name === 'ROOM_STATE') {
+            setRoomDetail(event.data)
+        }
+    })
 
-    const handleModalOpen = () => {
-        setModalOpen(true)
+    const renderByRoomState = (state: RoomState) => {
+        if (!userRole) return <p>로딩중...</p>
+        switch (state) {
+            case 'IDLE':
+                return (
+                    <RoomStartButton
+                        roomId={roomId}
+                        isHost={userRole === 'host'}
+                        onModalOpen={handleModalOpen}
+                    />
+                )
+            case 'PICKING':
+                return <p>{roomDetail?.pickerId} 님이 곡을 고르는 중...</p>
+            default:
+                return null
+        }
     }
 
     if (!roomId) return notFound()
@@ -123,52 +148,23 @@ export default function RoomPage() {
                         {/*<section className={s.table_section}>테이블</section>*/}
                         {/* TODO : 시작 스타일링 */}
                         <section className={s.start_section}>
-                            <RoomStartButton
-                                roomId={roomId}
-                                isHost={userRole === 'host'}
-                                onModalOpen={handleModalOpen}
-                            />
+                            {renderByRoomState(roomDetail?.state ?? 'IDLE')}
                         </section>
                     </main>
                     <aside>
                         <RoomChat roomId={roomId} />
                     </aside>
                 </div>
-                {/*<Button onClick={() => setModalOpen(true)}>모달 오픈 테스트</Button>*/}
             </div>
             {modalOpen && (
                 <SpotifyPickModal
                     open={modalOpen}
                     onClose={() => setModalOpen(false)}
                     onSelect={handleSelect}
+                    roomId={roomId}
+                    roomState={roomDetail?.state}
                 />
             )}
         </>
-        // <main style={{ padding: 24 }}>
-        //     <h1>Room: {roomId}</h1>
-        //     <p>연결 상태: {connected ? 'connected' : 'connecting...'}</p>
-        //     <h3>참여자({members.length})</h3>
-        //     <ul>
-        //         {members.map((m) => (
-        //             <li key={m.clientId}>{m.clientId}</li>
-        //         ))}
-        //     </ul>
-        //
-        //     <button
-        //         onClick={() => publish('announce', { text: 'Hello room!' })}
-        //         disabled={!connected}
-        //     >
-        //         방에 알림 보내기
-        //     </button>
-        //
-        //     <RoomChat roomId={roomId} />
-        //
-        //     <Button onClick={() => setModalOpen(true)}>모달 오픈 테스트</Button>
-        //     <SpotifyPickModal
-        //         open={modalOpen}
-        //         onClose={() => setModalOpen(false)}
-        //         onSelect={handleSelect}
-        //     />
-        // </main>
     )
 }

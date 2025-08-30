@@ -2,22 +2,45 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { SpotifyTrack } from '@/lib/server/spotify'
+import { RoomState } from '@/types'
 
 interface SpotifyPickModalProps {
     open: boolean
     onClose: () => void
     onSelect: (track: SpotifyTrack) => void
+    roomId: string
+    roomState?: RoomState
 }
 
 export default function SpotifyPickModal({
     open,
     onClose,
     onSelect,
+    roomId,
+    roomState,
 }: SpotifyPickModalProps) {
     const [keyword, setKeyword] = useState('')
     const [items, setItems] = useState<SpotifyTrack[]>([])
     const [loading, setLoading] = useState(false)
     const timer = useRef<number | null>(null)
+
+    const handlePick = async (track: SpotifyTrack) => {
+        try {
+            const response = await fetch(`/api/rooms/${roomId}/pick`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    track,
+                    idempotencyKey: crypto.randomUUID(),
+                }),
+            })
+            if (response.ok) {
+                onSelect(track)
+            }
+        } catch (e) {
+            console.error(e)
+        }
+    }
 
     // 디바운스 검색
     useEffect(() => {
@@ -48,7 +71,7 @@ export default function SpotifyPickModal({
         }
     }, [keyword, open])
 
-    if (!open) return null
+    if (!open || roomState !== 'PICKING') return null
 
     return (
         <div
@@ -94,7 +117,7 @@ export default function SpotifyPickModal({
                         {items.map((t) => (
                             <li key={t.id}>
                                 <button
-                                    onClick={() => onSelect(t)}
+                                    onClick={() => handlePick(t)}
                                     className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-2 text-left hover:bg-gray-50"
                                 >
                                     {/* 앨범 이미지 */}

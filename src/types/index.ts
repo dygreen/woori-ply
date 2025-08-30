@@ -22,6 +22,7 @@ export type Room = {
     playlist: { trackId: string; pickerId: string; addedAt: number }[]
     memberOrder: string[]
     turnIndex: number
+    pickerId?: string
     current?: {
         pickerId?: string
         track?: {

@@ -1,0 +1,55 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession, Session } from 'next-auth'
+import { GET as authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { db } from '@/lib/server/db'
+import { publishRoomEvent } from '@/lib/server/ably'
+
+export async function POST(
+    req: NextRequest,
+    { params }: { params: { roomId: string } },
+) {
+    const session: Session | null = await getServerSession(authOptions)
+    if (!session)
+        return NextResponse.json(
+            { message: '로그인이 필요한 서비스입니다.' },
+            { status: 401 },
+        )
+
+    const { roomId } = params
+    const body = await req.json()
+    const { track, idempotencyKey } = body
+
+    const database = await db()
+    const rooms = database.collection('rooms')
+
+    const room = await rooms.findOne({ roomId })
+    if (!room) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    if (room.state !== 'PICKING') {
+        return NextResponse.json({ error: 'Invalid state' }, { status: 400 })
+    }
+    if (room.pickerId !== session?.user?.email) {
+        return NextResponse.json({ error: 'Not your turn' }, { status: 403 })
+    }
+
+    // VOTING 전이
+    const endsAt = Date.now() + 20_000
+    const updated = await rooms.findOneAndUpdate(
+        { roomId },
+        {
+            $set: {
+                state: 'VOTING',
+                current: { track, pickerId: session?.user?.email },
+                endsAt,
+            },
+        },
+        { returnDocument: 'after' },
+    )
+
+    // 이벤트 브로드캐스트
+    await publishRoomEvent(roomId, 'TRACK_PICKED', { track })
+    await publishRoomEvent(roomId, 'VOTING_STARTED', { endsAt })
+    await publishRoomEvent(roomId, 'ROOM_STATE', updated)
+
+    return NextResponse.json({ ok: true })
+}
