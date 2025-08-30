@@ -11,7 +11,7 @@ import { useRoomChannel } from '@/hooks/useRoomChannel'
 import RoomChat from '@/components/chat/RoomChat'
 import s from '@/app/rooms/[roomId]/room.module.scss'
 import { RoomRole } from '@/types'
-import RoomControls from '@/components/room/RoomControls'
+import RoomStartButton from '@/components/room/RoomStartButton'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -123,7 +123,7 @@ export default function RoomPage() {
                         {/*<section className={s.table_section}>테이블</section>*/}
                         {/* TODO : 시작 스타일링 */}
                         <section className={s.start_section}>
-                            <RoomControls
+                            <RoomStartButton
                                 roomId={roomId}
                                 isHost={userRole === 'host'}
                                 onModalOpen={handleModalOpen}

@@ -31,28 +31,28 @@ export async function POST(
     }
 
     // 상태 검증
-    // if (room.status !== 'IDLE') {
-    //     return NextResponse.json({ error: 'Invalid state' }, { status: 400 })
-    // }
-    //
-    // // PICKING 전이
-    // const nextPickerId = room.memberOrder[room.turnIndex ?? 0]
-    // const updated = await rooms.findOneAndUpdate(
-    //     { roomId },
-    //     {
-    //         $set: {
-    //             status: 'PICKING',
-    //             pickerId: nextPickerId,
-    //         },
-    //     },
-    //     { returnDocument: 'after' },
-    // )
+    if (room.state !== 'IDLE') {
+        return NextResponse.json({ error: 'Invalid state' }, { status: 400 })
+    }
+
+    // PICKING 전이
+    const nextPickerId = room.memberOrder[room.turnIndex ?? 0]
+    const updated = await rooms.findOneAndUpdate(
+        { roomId },
+        {
+            $set: {
+                state: 'PICKING',
+                pickerId: nextPickerId,
+            },
+        },
+        { returnDocument: 'after' },
+    )
 
     // 이벤트 브로드캐스트
-    // await publishRoomEvent(roomId, 'TURN_STARTED', {
-    //     pickerId: nextPickerId,
-    // })
-    // await publishRoomEvent(roomId, 'ROOM_STATE', updated)
+    await publishRoomEvent(roomId, 'TURN_STARTED', {
+        pickerId: nextPickerId,
+    })
+    await publishRoomEvent(roomId, 'ROOM_STATE', updated)
 
     return NextResponse.json({ ok: true })
 }

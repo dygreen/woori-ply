@@ -1,16 +1,16 @@
 'use client'
 
-interface RoomControlsProps {
+interface RoomStartButtonProps {
     roomId: string
     isHost: boolean
     onModalOpen: () => void
 }
 
-export default function RoomControls({
+export default function RoomStartButton({
     roomId,
     isHost,
     onModalOpen,
-}: RoomControlsProps) {
+}: RoomStartButtonProps) {
     const handleStart = async () => {
         const response = await fetch(`/api/rooms/${roomId}/start`, {
             method: 'POST',
@@ -22,7 +22,13 @@ export default function RoomControls({
         }
     }
 
-    if (!isHost) return null
-
-    return <button onClick={handleStart}>시작!</button>
+    return (
+        <>
+            {isHost ? (
+                <button onClick={handleStart}>시작!</button>
+            ) : (
+                <p>방장이 준비되면 시작됩니다.</p>
+            )}
+        </>
+    )
 }
