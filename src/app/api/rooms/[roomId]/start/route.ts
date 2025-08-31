@@ -13,7 +13,7 @@ async function getMemberName(database: Db, roomId: string, userId: string) {
 
 export async function POST(
     _req: NextRequest,
-    { params }: { params: { roomId: string } },
+    { params }: { params: Promise<{ roomId: string }> },
 ) {
     const session: Session | null = await getServerSession(authOptions)
     if (!session)
@@ -22,7 +22,7 @@ export async function POST(
             { status: 401 },
         )
 
-    const { roomId } = params
+    const { roomId } = await params
     const database = await db()
     const rooms = database.collection('rooms')
 
