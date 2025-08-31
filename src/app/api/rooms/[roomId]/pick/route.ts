@@ -3,6 +3,7 @@ import { getServerSession, Session } from 'next-auth'
 import { GET as authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/server/db'
 import { publishRoomEvent } from '@/lib/server/ably'
+import { Room } from '@/types'
 
 export async function POST(
     req: NextRequest,
@@ -45,7 +46,7 @@ export async function POST(
     // VOTING 전이
     const endsAt = Date.now() + 20_000
     const updated = await rooms.findOneAndUpdate(
-        { roomId },
+        { roomId, state: 'PICKING' },
         {
             $set: {
                 state: 'VOTING',
@@ -54,7 +55,13 @@ export async function POST(
                     pickerId: session?.user?.email,
                     pickerName: session?.user?.name,
                 },
-                endsAt,
+                voting: {
+                    round: room.turnIndex,
+                    trackId: track.id,
+                    pickerId: session?.user?.email,
+                    endsAt,
+                    status: 'OPEN',
+                },
             },
         },
         { returnDocument: 'after' },

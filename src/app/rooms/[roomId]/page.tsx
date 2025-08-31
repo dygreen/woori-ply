@@ -12,6 +12,8 @@ import { Room, RoomRole, RoomState, SpotifyTrack } from '@/types'
 import RoomStartButton from '@/components/room/RoomStartButton'
 import { useRoomEvents } from '@/lib/client/useRoomEvents'
 import SelectedAlbum from '@/components/room/SelectedAlbum'
+import VotedPlyTable from '@/components/room/VotedPlyTable'
+import VotingContent from '@/components/room/VotingContent'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -110,6 +112,7 @@ export default function RoomPage() {
     }, [subscribe, router, showError])
 
     useRoomEvents(roomId, (event) => {
+        console.log('event : ', event)
         if (event.name === 'ROOM_STATE') {
             setRoomDetail(event.data)
         }
@@ -144,7 +147,17 @@ export default function RoomPage() {
                     <>
                         <section className={s.album_section}>
                             <SelectedAlbum roomDetail={roomDetail} />
+                            {state === 'VOTING' && (
+                                <VotingContent
+                                    roomId={roomId}
+                                    roomState="VOTING"
+                                    voting={roomDetail?.voting as any} // 서버가 내려주는 voting meta(endsAt 등)
+                                    initialSummary={undefined} // 있으면 전달
+                                />
+                            )}
+                            {/*TODO: boom up/down ui 넣기*/}
                         </section>
+                        {/*TODO: VotedPlyTable 추가*/}
                         <section className={s.table_section}>테이블</section>
                     </>
                 )

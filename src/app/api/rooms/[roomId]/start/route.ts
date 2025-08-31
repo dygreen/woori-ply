@@ -41,6 +41,7 @@ export async function POST(
     }
 
     // 상태 검증
+    // TODO: 주석 제거
     // if (room.state !== 'IDLE') {
     //     return NextResponse.json(
     //         { ok: false, message: 'Invalid state' },
@@ -53,7 +54,7 @@ export async function POST(
     const nextPickerName = await getMemberName(database, roomId, nextPickerId)
 
     const updated = await rooms.findOneAndUpdate(
-        { roomId },
+        { roomId, state: 'IDLE' },
         {
             $set: {
                 state: 'PICKING',

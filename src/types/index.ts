@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 export type RoomStatus = 'open' | 'closed'
 export type RoomRole = 'host' | 'guest'
 export type RoomState = 'IDLE' | 'PICKING' | 'VOTING' | 'APPLYING' | 'FINISHED'
+export type VoteValue = 'UP' | 'DOWN'
 
 export type User = {
     name: string
@@ -35,7 +36,15 @@ export type Room = {
             durationMs: number
             previewUrl: string | null
         }
-        vote?: { endsAt: number; up: string[]; down: string[] }
+    }
+    voting?: {
+        round: number
+        trackId: string
+        pickerId: string
+        endsAt: number
+        status: 'OPEN' | 'APPLYING' | 'APPLIED'
+        upCount?: number
+        downCount?: number
     }
     createdAt: Date
     closedAt?: Date
@@ -82,4 +91,15 @@ export type SpotifyAlbum = {
     name: string
     images: SpotifyImage[]
 }
+
 export type SpotifyImage = { url: string; width: number; height: number }
+
+export type Vote = {
+    _id: ObjectId
+    roomId: ObjectId
+    round: number
+    userId: string
+    value: VoteValue
+    lastKey?: string // 마지막 처리한 idempotencyKey
+    updatedAt: Date
+}
