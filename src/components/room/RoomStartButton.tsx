@@ -1,5 +1,7 @@
 'use client'
 
+import { useAlert } from '@/components/providers/AlertProvider'
+
 interface RoomStartButtonProps {
     roomId: string
     isHost: boolean
@@ -11,14 +13,22 @@ export default function RoomStartButton({
     isHost,
     onModalOpen,
 }: RoomStartButtonProps) {
+    const { showError } = useAlert()
+
     const handleStart = async () => {
-        const response = await fetch(`/api/rooms/${roomId}/start`, {
-            method: 'POST',
-        })
-        if (response.ok) {
-            onModalOpen()
-        } else {
-            console.error('Room start failed')
+        try {
+            const response = await fetch(`/api/rooms/${roomId}/start`, {
+                method: 'POST',
+            })
+            const data = await response.json()
+
+            if (response.ok) {
+                onModalOpen()
+            } else {
+                showError(data.message)
+            }
+        } catch (e) {
+            console.error(e)
         }
     }
 

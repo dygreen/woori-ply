@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { SpotifyTrack } from '@/lib/server/spotify'
 import { RoomState } from '@/types'
+import { useAlert } from '@/components/providers/AlertProvider'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
 
 interface SpotifyPickModalProps {
     open: boolean
@@ -17,13 +19,18 @@ export default function SpotifyPickModal({
     roomId,
     roomState,
 }: SpotifyPickModalProps) {
-    const [keyword, setKeyword] = useState('')
+    const [keyword, setKeyword] = useState<string>('')
     const [items, setItems] = useState<SpotifyTrack[]>([])
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState<boolean>(false)
+    const [picking, setPicking] = useState<boolean>(false)
     const timer = useRef<number | null>(null)
+
+    const { showError } = useAlert()
 
     const handlePick = async (track: SpotifyTrack) => {
         try {
+            setPicking(true)
+
             const response = await fetch(`/api/rooms/${roomId}/pick`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -32,7 +39,14 @@ export default function SpotifyPickModal({
                     idempotencyKey: crypto.randomUUID(),
                 }),
             })
-            if (response.ok) onClose()
+            const data = await response.json()
+
+            if (response.ok) {
+                setPicking(false)
+                onClose()
+            } else {
+                showError(data.message)
+            }
         } catch (e) {
             console.error(e)
         }
@@ -70,72 +84,80 @@ export default function SpotifyPickModal({
     if (!open || roomState !== 'PICKING') return null
 
     return (
-        <div
-            aria-modal
-            role="dialog"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-        >
-            <div
-                className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-xl"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <h2 className="mb-4 text-lg font-semibold">노래 선택</h2>
+        <>
+            {picking ? (
+                <LoadingSpinner />
+            ) : (
+                <div
+                    aria-modal
+                    role="dialog"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+                >
+                    <div
+                        className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="mb-4 text-lg font-semibold">
+                            노래 선택
+                        </h2>
 
-                <input
-                    autoFocus
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="곡명, 가수명으로 검색"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2"
-                />
+                        <input
+                            autoFocus
+                            value={keyword}
+                            onChange={(e) => setKeyword(e.target.value)}
+                            placeholder="곡명, 가수명으로 검색"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:ring-2"
+                        />
 
-                <div className="mt-4 max-h-[420px] overflow-y-auto">
-                    {loading && (
-                        <div className="py-6 text-center text-sm text-gray-500">
-                            검색 중…
+                        <div className="mt-4 max-h-[420px] overflow-y-auto">
+                            {loading && (
+                                <div className="py-6 text-center text-sm text-gray-500">
+                                    검색 중…
+                                </div>
+                            )}
+                            {!loading && items.length === 0 && keyword && (
+                                <div className="py-6 text-center text-sm text-gray-500">
+                                    검색 결과가 없습니다
+                                </div>
+                            )}
+                            <ul className="space-y-2">
+                                {items.map((t) => (
+                                    <li key={t.id}>
+                                        <button
+                                            onClick={() => handlePick(t)}
+                                            className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-2 text-left hover:bg-gray-50"
+                                        >
+                                            {/* 앨범 이미지 */}
+                                            <div className="h-12 w-12 overflow-hidden rounded-md bg-gray-100">
+                                                {t.album.image ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={t.album.image}
+                                                        alt={t.name}
+                                                        className="h-full w-full object-cover"
+                                                    />
+                                                ) : null}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate font-medium">
+                                                    {t.name}
+                                                </div>
+                                                <div className="truncate text-sm text-gray-500">
+                                                    {t.artists}
+                                                </div>
+                                            </div>
+                                            <div className="text-xs text-gray-400">
+                                                {formatMs(t.durationMs)}
+                                            </div>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                    )}
-                    {!loading && items.length === 0 && keyword && (
-                        <div className="py-6 text-center text-sm text-gray-500">
-                            검색 결과가 없습니다
-                        </div>
-                    )}
-                    <ul className="space-y-2">
-                        {items.map((t) => (
-                            <li key={t.id}>
-                                <button
-                                    onClick={() => handlePick(t)}
-                                    className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-2 text-left hover:bg-gray-50"
-                                >
-                                    {/* 앨범 이미지 */}
-                                    <div className="h-12 w-12 overflow-hidden rounded-md bg-gray-100">
-                                        {t.album.image ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={t.album.image}
-                                                alt={t.name}
-                                                className="h-full w-full object-cover"
-                                            />
-                                        ) : null}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="truncate font-medium">
-                                            {t.name}
-                                        </div>
-                                        <div className="truncate text-sm text-gray-500">
-                                            {t.artists}
-                                        </div>
-                                    </div>
-                                    <div className="text-xs text-gray-400">
-                                        {formatMs(t.durationMs)}
-                                    </div>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                    </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </>
     )
 }
 
