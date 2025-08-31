@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { SpotifyTrack } from '@/lib/server/spotify'
-import { RoomState } from '@/types'
+import { RoomState, SpotifyTrack } from '@/types'
 import { useAlert } from '@/components/providers/AlertProvider'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
+import Image from 'next/image'
+import { formatMs, pickAlbumImage } from '@/lib/spotify/utils'
 
 interface SpotifyPickModalProps {
     open: boolean
@@ -127,16 +128,16 @@ export default function SpotifyPickModal({
                                             onClick={() => handlePick(t)}
                                             className="flex w-full items-center gap-3 rounded-xl border border-gray-200 p-2 text-left hover:bg-gray-50"
                                         >
-                                            {/* 앨범 이미지 */}
                                             <div className="h-12 w-12 overflow-hidden rounded-md bg-gray-100">
-                                                {t.album.image ? (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img
-                                                        src={t.album.image}
-                                                        alt={t.name}
-                                                        className="h-full w-full object-cover"
-                                                    />
-                                                ) : null}
+                                                <Image
+                                                    src={pickAlbumImage(
+                                                        t.album.images,
+                                                        64,
+                                                    )}
+                                                    alt={t.name}
+                                                    width={64}
+                                                    height={64}
+                                                />
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="truncate font-medium">
@@ -159,10 +160,4 @@ export default function SpotifyPickModal({
             )}
         </>
     )
-}
-
-function formatMs(ms: number) {
-    const m = Math.floor(ms / 60000)
-    const s = Math.floor((ms % 60000) / 1000)
-    return `${m}:${String(s).padStart(2, '0')}`
 }

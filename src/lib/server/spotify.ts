@@ -1,3 +1,5 @@
+import { SpotifyTrack } from '@/types'
+
 let cachedToken: { accessToken: string; expiresAt: number } | null = null
 
 async function getAppToken(): Promise<string> {
@@ -34,15 +36,6 @@ async function getAppToken(): Promise<string> {
     return cachedToken.accessToken
 }
 
-export type SpotifyTrack = {
-    id: string
-    name: string
-    artists: string
-    album: { id: string; name: string; image: string | null }
-    durationMs: number
-    previewUrl: string | null
-}
-
 export async function searchTracks(
     q: string,
     limit = 10,
@@ -72,7 +65,7 @@ export async function searchTracks(
         album: {
             id: it.album?.id ?? '',
             name: it.album?.name ?? '',
-            image: it.album?.images?.[it.album.images.length - 1]?.url ?? null, // 가장 작은 이미지
+            images: it.album?.images ?? null,
         },
         durationMs: it.duration_ms ?? 0,
         previewUrl: it.preview_url ?? null,

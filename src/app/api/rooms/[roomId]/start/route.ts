@@ -41,12 +41,12 @@ export async function POST(
     }
 
     // 상태 검증
-    if (room.state !== 'IDLE') {
-        return NextResponse.json(
-            { ok: false, message: 'Invalid state' },
-            { status: 400 },
-        )
-    }
+    // if (room.state !== 'IDLE') {
+    //     return NextResponse.json(
+    //         { ok: false, message: 'Invalid state' },
+    //         { status: 400 },
+    //     )
+    // }
 
     // PICKING 전이
     const nextPickerId = room.memberOrder[room.turnIndex ?? 0]

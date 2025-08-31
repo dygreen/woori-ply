@@ -31,11 +31,7 @@ export type Room = {
             id: string
             name: string
             artists: string
-            album: {
-                id: string
-                name: string
-                image: string
-            }
+            album: SpotifyAlbum
             durationMs: number
             previewUrl: string | null
         }
@@ -71,3 +67,19 @@ export type PresenceMember = {
     name?: string
     joinedAt?: number
 }
+
+export type SpotifyTrack = {
+    id: string
+    name: string
+    artists: string
+    album: SpotifyAlbum
+    durationMs: number
+    previewUrl: string | null
+}
+
+export type SpotifyAlbum = {
+    id: string
+    name: string
+    images: SpotifyImage[]
+}
+export type SpotifyImage = { url: string; width: number; height: number }
