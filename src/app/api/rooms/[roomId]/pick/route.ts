@@ -11,7 +11,7 @@ export async function POST(
     const session: Session | null = await getServerSession(authOptions)
     if (!session)
         return NextResponse.json(
-            { message: '로그인이 필요한 서비스입니다.' },
+            { ok: false, message: '로그인이 필요한 서비스입니다.' },
             { status: 401 },
         )
 
@@ -23,13 +23,23 @@ export async function POST(
     const rooms = database.collection('rooms')
 
     const room = await rooms.findOne({ roomId })
-    if (!room) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (!room)
+        return NextResponse.json(
+            { ok: false, message: 'Not found' },
+            { status: 404 },
+        )
 
     if (room.state !== 'PICKING') {
-        return NextResponse.json({ error: 'Invalid state' }, { status: 400 })
+        return NextResponse.json(
+            { ok: false, message: 'Invalid state' },
+            { status: 400 },
+        )
     }
     if (room.pickerId !== session?.user?.email) {
-        return NextResponse.json({ error: 'Not your turn' }, { status: 403 })
+        return NextResponse.json(
+            { ok: false, message: 'Not your turn' },
+            { status: 403 },
+        )
     }
 
     // VOTING 전이

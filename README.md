@@ -6,39 +6,29 @@
 ---
 
 ## 📌 프로젝트 소개
-우리플리는 **Next.js** 기반으로 제작된 실시간 음악 플레이리스트 투표 서비스입니다.  
-로그인을 통해 참여하고, 원하는 곡을 제안하거나 다른 사용자가 제안한 곡에 투표하여 플레이리스트를 만들어갑니다.  
-실시간 데이터 갱신과 직관적인 UI를 통해 친구, 동료들과 함께 음악을 즐길 수 있습니다.
+친구, 동료들과 함께 실시간으로 플레이리스트를 만들어가는 서비스입니다.  
+Next.js와 Ably Realtime을 기반으로 **실시간 데이터 동기화**를 구현했고,  
+MongoDB Atlas를 활용해 **방 생성·참여 및 곡/투표 데이터를 안정적으로 관리**합니다.  
+또한 Spotify API를 통해 원하는 곡을 검색·추천하고, 투표로 최종 목록을 확정할 수 있습니다.
 
 ---
 
 ## 🛠 기술 스택
 
-| 분류        | 기술                                                               |
-|-------------|------------------------------------------------------------------|
-| **Frontend** | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, MUI |
-| **Auth**     | NextAuth.js (GitHub OAuth, Credentials)                          |
-| **Backend**  | Next.js API Routes, MongoDB Atlas                                |
-| **Database** | MongoDB (Mongoose)                                               |
-| **Deploy**   | Vercel                                                           |
-| **Etc.**     | ESLint, Prettier                                                 |
+| 분류        | 기술                                                                 |
+|-------------|----------------------------------------------------------------------|
+| **Frontend** | Next.js 14, React 18, TypeScript, Tailwind CSS, MUI |
+| **Auth**     | NextAuth.js (GitHub OAuth) |
+| **Realtime** | Ably Realtime |
+| **Backend**  | Next.js API Routes, MongoDB Atlas |
+| **Deploy**   | Vercel |
 
 ---
 
 ## ✨ 주요 기능
 
-- **소셜 로그인**
-    - GitHub 계정으로 간편 로그인 (로그인 정보 DB 저장)
-    - NextAuth Credentials 로그인 지원
-
-- **방 생성 & 참여**
-    - 방을 만들고 초대 링크로 다른 사용자를 초대 가능
-    - 로그인하지 않은 사용자는 방 접속 시 메인으로 리다이렉트 → 로그인 후 원래 방으로 재접속 처리
-
-- **에러 처리**
-    - 존재하지 않는 방 접근 시 `404 Not Found` 처리
-    - 미인증 사용자는 API 요청 시 `401 Unauthorized` 응답 반환
-
-- **UI/UX**
-    - Tailwind CSS + MUI 조합으로 직관적인 인터페이스 구현
-    - 폼 검증은 Formik + Yup 적용
+- **소셜 로그인** : GitHub 계정으로 간편 로그인
+- **방 생성 & 참여** : 초대 링크로 실시간 방 참여
+- **실시간 상태 관리** : Ably Realtime 기반 턴 진행 & 채팅
+- **곡 추천 & 투표** : Spotify API 검색 → 투표로 플레이리스트 확정
+- **UI/UX** : Tailwind + MUI 조합, 반응형 레이아웃

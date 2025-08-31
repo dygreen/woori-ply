@@ -5,13 +5,13 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useAlert } from '@/components/providers/AlertProvider'
 import SpotifyPickModal from '@/components/spotify/SpotifyPickModal'
-import { SpotifyTrack } from '@/lib/server/spotify'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import RoomChat from '@/components/chat/RoomChat'
 import s from '@/app/rooms/[roomId]/room.module.scss'
-import { Room, RoomRole, RoomState } from '@/types'
+import { Room, RoomRole, RoomState, SpotifyTrack } from '@/types'
 import RoomStartButton from '@/components/room/RoomStartButton'
 import { useRoomEvents } from '@/lib/client/useRoomEvents'
+import SelectedAlbum from '@/components/room/SelectedAlbum'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -116,34 +116,34 @@ export default function RoomPage() {
     })
 
     const renderByRoomState = (state: RoomState) => {
-        if (!userRole) return <p>로딩중...</p>
+        if (!userRole)
+            return (
+                <section className={s.start_section}>
+                    <p>로딩중...</p>
+                </section>
+            )
         switch (state) {
             case 'IDLE':
                 return (
-                    <RoomStartButton
-                        roomId={roomId}
-                        isHost={userRole === 'host'}
-                        onModalOpen={handleModalOpen}
-                    />
+                    <section className={s.start_section}>
+                        <RoomStartButton
+                            roomId={roomId}
+                            isHost={userRole === 'host'}
+                            onModalOpen={handleModalOpen}
+                        />
+                    </section>
                 )
             case 'PICKING':
-                return <p>{roomDetail?.pickerName} 님이 곡을 고르는 중...</p>
+                return (
+                    <section className={s.start_section}>
+                        <p>{roomDetail?.pickerName} 님이 곡을 고르는 중...</p>
+                    </section>
+                )
             default:
                 return (
                     <>
-                        {/*TODO : 앨범, 컨텐츠, 테이블 영역 컴포넌트화 및 재퍼블리싱*/}
                         <section className={s.album_section}>
-                            <div className={s.album_wrapper}>
-                                <img
-                                    src={
-                                        roomDetail?.current?.track?.album?.image
-                                    }
-                                    alt={
-                                        roomDetail?.current?.track?.album?.name
-                                    }
-                                />
-                            </div>
-                            <div className={s.detail_wrapper}>컨텐츠</div>
+                            <SelectedAlbum roomDetail={roomDetail} />
                         </section>
                         <section className={s.table_section}>테이블</section>
                     </>
@@ -159,9 +159,7 @@ export default function RoomPage() {
                 <header>우리플리</header>
                 <div className={s.room_content}>
                     <main>
-                        <section className={s.start_section}>
-                            {renderByRoomState(roomDetail?.state ?? 'IDLE')}
-                        </section>
+                        {renderByRoomState(roomDetail?.state ?? 'IDLE')}
                     </main>
                     <aside>
                         <RoomChat roomId={roomId} />

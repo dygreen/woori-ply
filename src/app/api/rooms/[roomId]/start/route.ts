@@ -18,7 +18,7 @@ export async function POST(
     const session: Session | null = await getServerSession(authOptions)
     if (!session)
         return NextResponse.json(
-            { message: '로그인이 필요한 서비스입니다.' },
+            { ok: false, message: '로그인이 필요한 서비스입니다.' },
             { status: 401 },
         )
 
@@ -32,15 +32,21 @@ export async function POST(
     // host 검증
     if (room.ownerId !== session?.user?.email) {
         return NextResponse.json(
-            { error: '방장만 시작할 수 있어요. 방장이 준비되면 시작됩니다.' },
+            {
+                ok: false,
+                error: '방장만 시작할 수 있어요. 방장이 준비되면 시작됩니다.',
+            },
             { status: 403 },
         )
     }
 
     // 상태 검증
-    if (room.state !== 'IDLE') {
-        return NextResponse.json({ error: 'Invalid state' }, { status: 400 })
-    }
+    // if (room.state !== 'IDLE') {
+    //     return NextResponse.json(
+    //         { ok: false, message: 'Invalid state' },
+    //         { status: 400 },
+    //     )
+    // }
 
     // PICKING 전이
     const nextPickerId = room.memberOrder[room.turnIndex ?? 0]

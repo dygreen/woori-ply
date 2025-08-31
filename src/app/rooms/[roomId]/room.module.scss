@@ -17,7 +17,7 @@
 
   header {
     font-family: 'FlightSans-Bold', 'Roboto';
-    font-size: 24px;
+    font-size: 20px;
     margin-bottom: 16px;
   }
 
@@ -43,12 +43,46 @@
           height: 35%;
 
           .album_wrapper {
-            width: 35%;
-            background-color: #f9f586;
+            position: relative;
+            aspect-ratio: 1 / 1;
+            width: auto;
+            height: 100%;
+            max-height: 100%;
+            max-width: 35%;
+            flex-shrink: 0;
+            overflow: hidden;
+            border-radius: 10px;
           }
+
           .detail_wrapper {
             flex: 1;
-            background-color: #3DC2EC;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+
+            h3 {
+              font-weight: 700;
+              font-size: 32px;
+              line-height: 42px;
+            }
+
+            p {
+              font-weight: 400;
+              color: $grey-icon-color;
+            }
+
+            .artist_row {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+
+              span {
+                font-weight: 500;
+                color: $grey-text-color;
+              }
+            }
           }
         }
 
