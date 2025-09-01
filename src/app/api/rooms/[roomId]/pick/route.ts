@@ -7,7 +7,7 @@ import { Room } from '@/types'
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { roomId: string } },
+    { params }: { params: Promise<{ roomId: string }> },
 ) {
     const session: Session | null = await getServerSession(authOptions)
     if (!session)
@@ -16,7 +16,7 @@ export async function POST(
             { status: 401 },
         )
 
-    const { roomId } = params
+    const { roomId } = await params
     const body = await req.json()
     const { track, idempotencyKey } = body
 
