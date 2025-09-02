@@ -3,7 +3,6 @@ import { getServerSession, Session } from 'next-auth'
 import { GET as authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/server/db'
 import { publishRoomEvent } from '@/lib/server/ably'
-import { Room } from '@/types'
 
 export async function POST(
     req: NextRequest,

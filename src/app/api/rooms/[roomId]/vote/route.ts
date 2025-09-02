@@ -2,20 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { db } from '@/lib/server/db'
 import { publishRoomEvent } from '@/lib/server/ably'
-import { finalizeRound } from '@/lib/server/finalize'
-import { Room, Vote } from '@/types'
-import { ObjectId } from 'mongodb'
+import { finalizeVoting } from '@/lib/server/finalizeVoting'
+import { Room, VoteValue } from '@/types'
 
 export async function POST(
     req: NextRequest,
     { params }: { params: Promise<{ roomId: string }> },
 ) {
     const session = await getServerSession()
-    if (!session?.user?.name)
+    if (!session?.user?.email) {
         return NextResponse.json(
             { message: '로그인이 필요한 서비스입니다.' },
             { status: 401 },
         )
+    }
 
     const { value, idempotencyKey } = await req.json()
     if (value !== 'UP' && value !== 'DOWN') {
@@ -34,15 +34,16 @@ export async function POST(
     const { roomId } = await params
     const database = await db()
     const rooms = database.collection<Room>('rooms')
-    const votes = database.collection<Vote>('votes')
+    const votes = database.collection('votes')
 
+    // 최신 룸 스냅샷
     const room = await rooms.findOne({ roomId })
-    if (!room)
+    if (!room) {
         return NextResponse.json(
             { ok: false, message: 'ROOM_NOT_FOUND' },
             { status: 404 },
         )
-
+    }
     if (
         room.state !== 'VOTING' ||
         !room.voting ||
@@ -54,28 +55,18 @@ export async function POST(
         )
     }
 
-    // 이미 마감 시각 지남
     const now = Date.now()
-    if (now >= room.voting.endsAt) {
-        return NextResponse.json(
-            { ok: false, message: 'ENDED' },
-            { status: 409 },
-        )
-    }
-
-    const round = room.voting.round
+    const { round, trackId, pickerId, endsAt } = room.voting
     const userId = String(session.user.email)
-    const roomObjId = new ObjectId(room._id)
 
-    // 같은 키로 이미 처리한 경우
-    const existing = await votes.findOne({ roomObjId, round, userId })
+    // ── 1) 멱등 처리: 같은 key로 같은 값이면 요약만 리턴
+    const existing = await votes.findOne({ roomId, round, userId })
     if (
         existing &&
         existing.lastKey === idempotencyKey &&
         existing.value === value
     ) {
-        // 멱등 재시도 → 요약만 돌려주기
-        const summary = await computeSummary(votes, roomObjId, round, room)
+        const summary = await computeSummary(votes, roomId, round, room)
         return NextResponse.json({
             ok: true,
             yourVote: existing.value,
@@ -83,63 +74,79 @@ export async function POST(
         })
     }
 
-    // upsert (유저의 이전 표 제거 + 새 표 추가 = 값만 교체)
+    // ── 2) endsAt 지나 있음 → 여기서 바로 서버 마감 시도(멱등 안전)
+    if (typeof endsAt === 'number' && now >= endsAt) {
+        await finalizeVoting(database, roomId, 'ENDS_AT')
+        return NextResponse.json({ ok: true, message: 'ENDED_APPLYING' })
+    }
+
+    // ── 3) 표 upsert (1인 1표: 값 교체)
     await votes.updateOne(
-        { roomId: roomObjId, round, userId },
-        { $set: { value, updatedAt: new Date(), lastKey: idempotencyKey } },
+        { roomId, round, userId },
+        {
+            $set: {
+                roomId,
+                round,
+                trackId,
+                pickerId,
+                userId,
+                value: value as VoteValue,
+                updatedAt: now,
+                lastKey: idempotencyKey,
+            },
+            $setOnInsert: { createdAt: now },
+        },
         { upsert: true },
     )
 
-    // 빠른 요약 브로드캐스트
-    const summary = await computeSummary(votes, roomObjId, round, room)
+    // ── 4) 중간 요약 브로드캐스트 (선택)
+    const summary = await computeSummary(votes, roomId, round, room)
     try {
-        await publishRoomEvent(roomId, 'VOTE_SUMMARY', {
-            round,
-            ...summary,
-        })
+        await publishRoomEvent(roomId, 'VOTE_SUMMARY', { round, ...summary })
     } catch (e) {
         console.error('VOTE_SUMMARY publish failed:', e)
     }
 
-    // 조기 마감 체크: 완료 수 = active 멤버 수
-    const earlyCloseEnabled = summary.total >= 2 // 최소 2명 이상일 때만
-    if (earlyCloseEnabled && summary.completed >= summary.total) {
-        await finalizeRound(database, room)
+    // ── 5) 전원 투표 완료 시 즉시 마감
+    const eligibleVoters = (room.memberOrder ?? []).filter(
+        (id) => id !== pickerId,
+    )
+    const allVoted = summary.completed >= eligibleVoters.length
+    if (eligibleVoters.length >= 1 && allVoted) {
+        await finalizeVoting(database, roomId, 'ALL_VOTED')
     }
 
     return NextResponse.json({ ok: true, yourVote: value, summary })
 }
 
-// 집계 보조
+// 집계 보조: 이 라운드의 합계/완료/총원 계산
 async function computeSummary(
     votesCol: any,
-    roomId: ObjectId,
+    roomId: string,
     round: number,
-    room: any,
+    room: Room,
 ) {
     const agg = await votesCol
         .aggregate([
             { $match: { roomId, round } },
             {
                 $group: {
-                    _id: null,
-                    up: { $sum: { $cond: [{ $eq: ['$value', 'UP'] }, 1, 0] } },
-                    down: {
-                        $sum: { $cond: [{ $eq: ['$value', 'DOWN'] }, 1, 0] },
-                    },
-                    completed: { $sum: 1 },
+                    _id: '$value',
+                    count: { $sum: 1 },
                 },
             },
         ])
         .toArray()
 
-    const up = agg[0]?.up ?? 0
-    const down = agg[0]?.down ?? 0
-    const completed = agg[0]?.completed ?? 0
-    const total =
-        (room.members || []).filter((m: any) => m.active).length ||
-        (room.members || []).length ||
-        0
+    const up = agg.find((g: any) => g._id === 'UP')?.count ?? 0
+    const down = agg.find((g: any) => g._id === 'DOWN')?.count ?? 0
+    const completed = up + down
 
-    return { up, down, completed, total, endsAt: room.voting.endsAt }
+    // 총 투표 대상자: picker 제외 (추천자는 표를 던지지 않는 규칙)
+    const eligibleVoters = (room.memberOrder ?? []).filter(
+        (id) => id !== room.voting?.pickerId,
+    )
+    const total = eligibleVoters.length
+
+    return { up, down, completed, total, endsAt: room.voting!.endsAt }
 }

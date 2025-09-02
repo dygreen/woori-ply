@@ -22,7 +22,12 @@ export type Room = {
     status: RoomStatus
     state: RoomState
     maxSongs: number
-    playlist: { trackId: string; pickerId: string; addedAt: number }[]
+    playlist: {
+        trackId: string
+        pickerId: string
+        addedAt: number
+        track?: Track
+    }[]
     memberOrder: string[]
     turnIndex: number
     pickerId?: string
@@ -30,18 +35,20 @@ export type Room = {
     current?: {
         pickerId?: string
         pickerName?: string
-        track: {
-            id: string
-            name: string
-            artists: string
-            album: SpotifyAlbum
-            durationMs: number
-            previewUrl: string | null
-        }
+        track: Track
     }
     voting?: RoomVoting
     createdAt: Date
     closedAt?: Date
+}
+
+type Track = {
+    id: string
+    name: string
+    artists: string
+    album: SpotifyAlbum
+    durationMs: number
+    previewUrl: string | null
 }
 
 export type RoomVoting = {
@@ -52,6 +59,7 @@ export type RoomVoting = {
     status: VotingStatus
     upCount?: number
     downCount?: number
+    accepted?: boolean
 }
 
 export type RoomMember = {
