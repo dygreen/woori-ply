@@ -26,7 +26,7 @@ export async function POST(
     if (!room)
         return NextResponse.json({ message: 'Room not found' }, { status: 404 })
 
-    const role: RoomRole = room.ownerId === email ? 'host' : 'guest'
+    const role: RoomRole = room.ownerId === email ? 'HOST' : 'GUEST'
     const now = new Date()
 
     // upsert: 있으면 갱신, 없으면 추가
@@ -44,5 +44,5 @@ export async function POST(
         { upsert: true },
     )
 
-    return NextResponse.json({ ok: true, role })
+    return NextResponse.json({ ok: true, role, state: room.state })
 }

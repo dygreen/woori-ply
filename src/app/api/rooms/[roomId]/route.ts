@@ -24,7 +24,7 @@ export async function GET(
             },
         )
 
-    if (room.status !== 'open')
+    if (room.status !== 'OPEN')
         return NextResponse.json(
             {
                 message: 'Room is closed',

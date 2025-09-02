@@ -1,9 +1,11 @@
 import { ObjectId } from 'mongodb'
 
-export type RoomStatus = 'open' | 'closed'
-export type RoomRole = 'host' | 'guest'
+export type RoomStatus = 'OPEN' | 'CLOSED'
+export type RoomRole = 'HOST' | 'GUEST'
 export type RoomState = 'IDLE' | 'PICKING' | 'VOTING' | 'APPLYING' | 'FINISHED'
+
 export type VoteValue = 'UP' | 'DOWN'
+export type VotingStatus = 'OPEN' | 'APPLYING' | 'APPLIED'
 
 export type User = {
     name: string
@@ -37,17 +39,19 @@ export type Room = {
             previewUrl: string | null
         }
     }
-    voting?: {
-        round: number
-        trackId: string
-        pickerId: string
-        endsAt: number
-        status: 'OPEN' | 'APPLYING' | 'APPLIED'
-        upCount?: number
-        downCount?: number
-    }
+    voting?: RoomVoting
     createdAt: Date
     closedAt?: Date
+}
+
+export type RoomVoting = {
+    round: number
+    trackId: string
+    pickerId: string
+    endsAt: number
+    status: VotingStatus
+    upCount?: number
+    downCount?: number
 }
 
 export type RoomMember = {
@@ -94,6 +98,7 @@ export type SpotifyAlbum = {
 
 export type SpotifyImage = { url: string; width: number; height: number }
 
+// 개별 유저의 투표 기록
 export type Vote = {
     _id: ObjectId
     roomId: ObjectId

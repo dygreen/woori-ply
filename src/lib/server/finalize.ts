@@ -1,10 +1,9 @@
-// src/lib/server/finalize.ts
-import { ObjectId } from 'mongodb'
 import { publishRoomEvent } from '@/lib/server/ably'
 
 export async function finalizeRound(database: any, room: any) {
     const rooms = database.collection('rooms')
     const votes = database.collection('votes')
+    const roomId = room.roomId
 
     // 1) 락: OPEN → APPLYING
     const locked = await rooms.findOneAndUpdate(
@@ -15,7 +14,6 @@ export async function finalizeRound(database: any, room: any) {
     if (!locked.value) return // 이미 누군가 집계 중/완료
 
     // 2) 최종 집계
-    const roomId = new ObjectId(room._id)
     const round = room.voting.round
     const agg = await votes
         .aggregate([
@@ -64,14 +62,14 @@ export async function finalizeRound(database: any, room: any) {
     })
 
     // 4) 브로드캐스트
-    await publishRoomEvent(`room:${room.roomId}`, 'APPLIED', {
+    await publishRoomEvent(roomId, 'APPLIED', {
         round,
         accepted,
         up,
         down,
         trackId: room.voting.trackId,
     })
-    await publishRoomEvent(`room:${room.roomId}`, 'ROOM_STATE', {
+    await publishRoomEvent(roomId, 'ROOM_STATE', {
         state: updated.value.state,
         turnIndex: updated.value.turnIndex,
         playlist: updated.value.playlist,

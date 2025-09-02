@@ -1,6 +1,6 @@
-// src/hooks/useVoting.ts
-import { useEffect, useRef, useState } from 'react'
-import { useRoomChannel } from '@/hooks/useRoomChannel'
+import { useEffect, useMemo, useState } from 'react'
+import { getAblyRealtime } from '@/lib/client/ablyClient'
+import Ably from 'ably'
 
 export type VoteSummary = {
     up: number
@@ -8,39 +8,63 @@ export type VoteSummary = {
     completed: number
     total: number
     endsAt: number
-    round: number
+    round?: number
 }
 
 export function useVoting(roomId: string) {
-    const { subscribe } = useRoomChannel(roomId)
+    const rt = useMemo(() => getAblyRealtime(), [])
+    const channel = useMemo(
+        () => rt.channels.get(`room:${roomId}`),
+        [rt, roomId],
+    )
     const [summary, setSummary] = useState<VoteSummary | null>(null)
-    const lastRoundRef = useRef<number | null>(null)
 
     useEffect(() => {
-        // 서버 /vote/route.ts 가 publishRoomEvent(..., 'VOTE_SUMMARY', { round, ...summary })
-        // 로 쏘는 걸 그대로 받음
-        const offSummary = subscribe('VOTE_SUMMARY', (data: VoteSummary) => {
-            setSummary(data)
-            lastRoundRef.current = data.round
-        })
+        if (!channel) return
 
-        // (선택) 라운드 전환 시 이전 집계 잔상 제거
-        const offState = subscribe('ROOM_STATE', (data: any) => {
-            const state = data?.state
-            const round = data?.voting?.round
-            if (state === 'VOTING' && typeof round === 'number') {
-                if (lastRoundRef.current !== round) {
-                    setSummary(null)
-                    lastRoundRef.current = round
-                }
+        const onSummary = (msg: Ably.Message) => {
+            const data = msg.data as VoteSummary
+            // console.log('VOTE_SUMMARY <<', data)
+            setSummary(data)
+        }
+
+        channel.subscribe('VOTE_SUMMARY', onSummary)
+
+        // 방에 늦게 들어온 사람을 위해 마지막 집계 1건 불러오기
+        ;(async () => {
+            try {
+                // 1) attach를 기다린 뒤
+                await channel.attach()
+
+                // 2) 방에 늦게 들어온 사용자를 위해 마지막 집계 1건 로드
+                const page = await channel.history({
+                    limit: 1,
+                    untilAttach: true,
+                })
+                const last = page.items.find((m) => m.name === 'VOTE_SUMMARY')
+                if (last?.data) setSummary(last.data as VoteSummary)
+            } catch (e) {
+                console.error(e)
             }
-        })
+        })()
 
         return () => {
-            offSummary?.()
-            offState?.()
+            channel.unsubscribe('VOTE_SUMMARY', onSummary)
         }
-    }, [roomId, subscribe])
+    }, [channel])
 
-    return { summary }
+    useEffect(() => {
+        if (!channel) return
+        const onRoomState = (msg: Ably.Message) => {
+            const state = msg.data?.state
+            const round = msg.data?.voting?.round
+            if (state === 'VOTING' && typeof round === 'number') {
+                setSummary(null)
+            }
+        }
+        channel.subscribe('ROOM_STATE', onRoomState)
+        return () => channel.unsubscribe('ROOM_STATE', onRoomState)
+    }, [channel])
+
+    return { summary, setSummary }
 }

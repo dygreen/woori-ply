@@ -23,6 +23,7 @@ export default function RoomPage() {
     const { connected, members, publish, subscribe } = useRoomChannel(roomId)
 
     const [userRole, setUserRole] = useState<RoomRole | null>(null)
+    const [roomState, setRoomState] = useState<RoomState>('IDLE')
     const [roomDetail, setRoomDetail] = useState<Room | null>(null)
 
     const [modalOpen, setModalOpen] = useState(false)
@@ -51,6 +52,7 @@ export default function RoomPage() {
                 else {
                     showSuccess('방에 입장하셨습니다.')
                     setUserRole(data.role)
+                    setRoomState(data.state)
                 }
             } catch (e) {
                 console.error(e)
@@ -112,7 +114,7 @@ export default function RoomPage() {
     }, [subscribe, router, showError])
 
     useRoomEvents(roomId, (event) => {
-        console.log('event : ', event)
+        // console.log('event : ', event)
         if (event.name === 'ROOM_STATE') {
             setRoomDetail(event.data)
         }
@@ -131,7 +133,7 @@ export default function RoomPage() {
                     <section className={s.start_section}>
                         <RoomStartButton
                             roomId={roomId}
-                            isHost={userRole === 'host'}
+                            isHost={userRole === 'HOST'}
                             onModalOpen={handleModalOpen}
                         />
                     </section>
@@ -151,11 +153,9 @@ export default function RoomPage() {
                                 <VotingContent
                                     roomId={roomId}
                                     roomState="VOTING"
-                                    voting={roomDetail?.voting as any} // 서버가 내려주는 voting meta(endsAt 등)
-                                    initialSummary={undefined} // 있으면 전달
+                                    voting={roomDetail?.voting}
                                 />
                             )}
-                            {/*TODO: boom up/down ui 넣기*/}
                         </section>
                         {/*TODO: VotedPlyTable 추가*/}
                         <section className={s.table_section}>테이블</section>
@@ -172,7 +172,7 @@ export default function RoomPage() {
                 <header>우리플리</header>
                 <div className={s.room_content}>
                     <main>
-                        {renderByRoomState(roomDetail?.state ?? 'IDLE')}
+                        {renderByRoomState(roomDetail?.state ?? roomState)}
                     </main>
                     <aside>
                         <RoomChat roomId={roomId} />

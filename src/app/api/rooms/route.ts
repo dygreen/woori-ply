@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         _id: new ObjectId(),
         roomId,
         ownerId: userId,
-        status: 'open',
+        status: 'OPEN',
         state: 'IDLE',
         maxSongs,
         playlist: [],
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
         _id: new ObjectId(),
         roomId,
         userId,
-        role: 'host',
+        role: 'HOST',
         active: true,
         joinedAt: now,
     })
