@@ -22,12 +22,7 @@ export type Room = {
     status: RoomStatus
     state: RoomState
     maxSongs: number
-    playlist: {
-        trackId: string
-        pickerId: string
-        addedAt: number
-        track?: Track
-    }[]
+    playlist: Playlist[]
     memberOrder: string[]
     turnIndex: number
     pickerId?: string
@@ -40,6 +35,14 @@ export type Room = {
     voting?: RoomVoting
     createdAt: Date
     closedAt?: Date
+}
+
+export type Playlist = {
+    trackId: string
+    pickerId: string
+    pickerName: string
+    addedAt: number
+    track?: Track
 }
 
 type Track = {

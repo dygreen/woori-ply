@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCountdown } from '@/hooks/useCountdown'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import s from '@/app/rooms/[roomId]/room.module.scss'
@@ -74,6 +74,58 @@ export default function VotingContent({
     const total = activeTotal || 0
 
     const disableButtons = !votingOpen || completed >= total
+
+    const finalizeOnceRef = useRef(false)
+    const finalizeOnce = useCallback(
+        async (reason: 'ENDS_AT' | 'ALL_VOTED') => {
+            if (finalizeOnceRef.current) return
+            finalizeOnceRef.current = true
+            try {
+                await fetch(`/api/rooms/${roomId}/apply`, { method: 'POST' })
+            } catch (e) {
+                // 실패해도 서버 락으로 재시도 안전
+                console.error('[auto-finalize failed]', reason, e)
+                finalizeOnceRef.current = false // 원하면 재시도 허용
+            }
+        },
+        [roomId],
+    )
+
+    // A) 타이머 만료 감지 → 마감
+    useEffect(() => {
+        if (roomState !== 'VOTING') return
+        if (isOver) finalizeOnce('ENDS_AT')
+    }, [roomState, isOver, finalizeOnce])
+
+    // B) 실시간 합계로 전원 완료 감지 → 마감
+    useEffect(() => {
+        if (roomState !== 'VOTING') return
+
+        // 요약이 없으면 동작하지 않음 (멤버수 추론 X)
+        if (summary?.total == null) return
+
+        const completed = summary.completed ?? 0
+        const total = summary.total
+
+        if (total > 0 && completed >= total) {
+            finalizeOnce('ALL_VOTED')
+        }
+    }, [roomState, summary?.completed, summary?.total, finalizeOnce])
+
+    // (선택) C) 서버가 쏘는 실시간 요약 이벤트를 직접 구독하고 summary를 갱신
+    useEffect(() => {
+        return subscribe('VOTE_SUMMARY', (msg: any) => {
+            // msg가 바로 summary일 수도, {name,data}일 수도 있음
+            const data = msg?.data ?? msg
+            if (!data) return
+            setSummary(data as VoteSummary)
+        })
+    }, [subscribe, setSummary])
+
+    // 라운드 기준이 있다면 voting?.round, 없다면 endsAt 변화로 리셋
+    useEffect(() => {
+        finalizeOnceRef.current = false
+    }, [voting?.round, endsAt])
 
     return (
         <section

@@ -232,8 +232,9 @@ export default function RoomPage() {
                             )}
                             <DebugApply roomId={roomId} />
                         </section>
-                        {/*TODO: VotedPlyTable 추가*/}
-                        <section className={s.table_section}>테이블</section>
+                        <section className={s.table_section}>
+                            <VotedPlyTable playlist={roomDetail?.playlist} />
+                        </section>
                     </>
                 )
         }
