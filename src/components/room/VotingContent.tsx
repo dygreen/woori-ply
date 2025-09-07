@@ -81,7 +81,10 @@ export default function VotingContent({
             if (finalizeOnceRef.current) return
             finalizeOnceRef.current = true
             try {
-                await fetch(`/api/rooms/${roomId}/apply`, { method: 'POST' })
+                await fetch(`/api/rooms/${roomId}/apply`, {
+                    method: 'POST',
+                    body: JSON.stringify({ reason }),
+                })
             } catch (e) {
                 // 실패해도 서버 락으로 재시도 안전
                 console.error('[auto-finalize failed]', reason, e)

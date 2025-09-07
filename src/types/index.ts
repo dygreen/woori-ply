@@ -6,6 +6,7 @@ export type RoomState = 'IDLE' | 'PICKING' | 'VOTING' | 'APPLYING' | 'FINISHED'
 
 export type VoteValue = 'UP' | 'DOWN'
 export type VotingStatus = 'OPEN' | 'APPLYING' | 'APPLIED'
+export type VotingReason = 'ENDS_AT' | 'ALL_VOTED' | 'FORCE'
 
 export type User = {
     name: string
@@ -40,7 +41,7 @@ export type Room = {
 export type Playlist = {
     trackId: string
     pickerId: string
-    pickerName: string
+    pickerName?: string
     addedAt: number
     track?: Track
 }
@@ -112,7 +113,7 @@ export type SpotifyImage = { url: string; width: number; height: number }
 // 개별 유저의 투표 기록
 export type Vote = {
     _id: ObjectId
-    roomId: ObjectId
+    roomId: string
     round: number
     userId: string
     value: VoteValue

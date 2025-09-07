@@ -1,9 +1,7 @@
-// lib/server/finalizeVoting.ts
 import { Db } from 'mongodb'
 import { publishRoomEvent } from '@/lib/server/ably'
-import { Room } from '@/types'
+import { Room, Vote, VotingReason } from '@/types'
 
-type Reason = 'ENDS_AT' | 'ALL_VOTED' | 'FORCE'
 type FinalizeResult =
     | { skipped: true }
     | {
@@ -18,22 +16,22 @@ type FinalizeResult =
 export async function finalizeVoting(
     database: Db,
     roomId: string,
-    reason: Reason,
+    reason: VotingReason,
     opts?: { allowHostTieBreak?: boolean },
 ): Promise<FinalizeResult> {
     const rooms = database.collection<Room>('rooms')
-    const votes = database.collection('votes')
+    const votes = database.collection<Vote>('votes')
 
-    // 1) 최신 룸 스냅샷
     const room = await rooms.findOne({ roomId })
+    // console.log('room.state : ', room.state)
+    // console.log('room.voting : ', room.voting)
     if (!room || room.state !== 'VOTING' || !room.voting) {
         return { skipped: true }
     }
 
     const now = Date.now()
-    const staleMs = 15_000 // APPLYING이 이 시간 이상이면 강제 재락 허용
+    const staleMs = 15_000
 
-    // 2) 락: OPEN → APPLYING (+ FORCE 복구용 APPLYING stale 허용)
     const base = {
         _id: room._id,
         state: 'VOTING',
@@ -52,7 +50,6 @@ export async function finalizeVoting(
             ...base,
             $or: [
                 { 'voting.status': 'OPEN' },
-                // APPLYING 이지만 오래된 경우(이전 집계가 죽었을 때) 강제 재락
                 {
                     'voting.status': 'APPLYING',
                     'voting.applyAt': { $lte: now - staleMs },
@@ -64,23 +61,21 @@ export async function finalizeVoting(
         lockFilter = { ...base, 'voting.status': 'OPEN' }
     }
 
+    // console.log('lockFilter : ', lockFilter)
     const lockRes = await rooms.findOneAndUpdate(
         lockFilter,
         { $set: { 'voting.status': 'APPLYING', 'voting.applyAt': now } },
         { returnDocument: 'after' },
     )
 
-    const lockedRoom = lockRes?.value
-    if (!lockedRoom) {
-        // 왜 안잡혔는지 진단용 로그(원하면 유지)
-        // const cur = await rooms.findOne({ _id: room._id }, { projection: { state: 1, voting: 1 } })
-        // console.log('[finalize] lock miss', { reason, now, cur })
+    // console.log('lockRes : ', lockRes)
+    if (!lockRes) {
         return { skipped: true }
     }
 
-    const { round, trackId, pickerId } = lockedRoom.voting!
+    const { round, trackId, pickerId } = lockRes.voting!
 
-    // 3) 집계: 트랙 기준 → 0표면 라운드 기준 폴백
+    // 집계: 트랙 기준 → 0표면 라운드 기준 폴백
     const aggWithTrack = await votes
         .aggregate([
             { $match: { roomId, round, trackId } },
@@ -101,38 +96,36 @@ export async function finalizeVoting(
         downCount = aggRoundOnly.find((g: any) => g._id === 'DOWN')?.count ?? 0
     }
 
-    // 4) 채택 규칙 (+ 호스트 타이브레이크)
+    // 채택 규칙 (+ 호스트 타이브레이크)
     let accepted = upCount > downCount
     if (!accepted && upCount === downCount && opts?.allowHostTieBreak) {
         const hostVote = await votes.findOne({
             roomId,
             round,
-            userId: lockedRoom.ownerId,
+            userId: lockRes.ownerId,
         })
         accepted = hostVote?.value === 'UP'
     }
 
-    // 5) 다음 상태/턴 계산
-    const targetCount =
-        (lockedRoom as any).targetCount ?? lockedRoom.maxSongs ?? 10
-    const willLen = (lockedRoom.playlist?.length ?? 0) + (accepted ? 1 : 0)
+    // 다음 상태/턴 계산
+    const targetCount = (lockRes as any).targetCount ?? lockRes.maxSongs ?? 10
+    const willLen = (lockRes.playlist?.length ?? 0) + (accepted ? 1 : 0)
     const willFinish = willLen >= targetCount
 
-    const order = lockedRoom.memberOrder ?? []
-    const currTurn = lockedRoom.turnIndex ?? 0
+    const order = lockRes.memberOrder ?? []
+    const currTurn = lockRes.turnIndex ?? 0
     const nextTurn = order.length ? (currTurn + 1) % order.length : currTurn + 1
     const nextPickerId = order.length ? order[nextTurn] : undefined
     const nextState: 'PICKING' | 'FINISHED' = willFinish
         ? 'FINISHED'
         : 'PICKING'
 
-    const trackSnapshot = lockedRoom.current?.track
-    const pickerNameSnapshot = lockedRoom.current?.pickerName
+    const trackSnapshot = lockRes.current?.track
+    const pickerNameSnapshot = lockRes.current?.pickerName
 
-    // 6-A) playlist push를 단독으로 먼저 수행
     if (accepted) {
         await rooms.updateOne(
-            { _id: lockedRoom._id },
+            { _id: lockRes._id },
             {
                 $push: {
                     playlist: {
@@ -149,34 +142,34 @@ export async function finalizeVoting(
         )
     }
 
-    // 6-B) 상태 전이 + voting APPLIED + applyAt 정리 + current 정리
+    // 상태 전이 + voting APPLIED + applyAt 정리 + current 정리
     await rooms.updateOne(
-        { _id: lockedRoom._id },
+        { _id: lockRes._id },
         {
             $set: {
                 state: nextState,
                 turnIndex: nextTurn,
-                ...(willFinish
-                    ? { pickerId: undefined }
-                    : { pickerId: nextPickerId }),
-                voting: {
-                    ...lockedRoom.voting!,
-                    upCount,
-                    downCount,
-                    status: 'APPLIED',
-                },
+                ...(willFinish ? {} : { pickerId: nextPickerId }),
+                'voting.upCount': upCount,
+                'voting.downCount': downCount,
+                'voting.status': 'APPLIED',
             },
-            $unset: { current: '', 'voting.applyAt': '' },
+            $unset: {
+                current: '',
+                'voting.applyAt': '',
+                ...(willFinish ? { pickerId: '' } : {}),
+            },
         },
     )
 
     // 최종 스냅샷
     const updated = (await rooms.findOne({
-        _id: lockedRoom._id,
+        _id: lockRes._id,
     })) as Room | null
+    console.log('updated : ', updated)
     if (!updated) return { skipped: true }
 
-    // 7) 이벤트
+    // 이벤트
     try {
         await publishRoomEvent(roomId, 'APPLIED', {
             round,
@@ -190,13 +183,14 @@ export async function finalizeVoting(
             nextTurnIndex: nextTurn,
             nextPickerId,
             newPlaylistLen: updated.playlist?.length ?? willLen,
+            playlist: updated.playlist,
         })
     } catch (e) {
         console.error('[APPLIED publish failed]', e)
     }
 
     try {
-        await publishRoomEvent(roomId, 'ROOM_STATE', updated) // Full Room
+        await publishRoomEvent(roomId, 'ROOM_STATE', updated)
     } catch (e) {
         console.error('[ROOM_STATE publish failed]', e)
     }
