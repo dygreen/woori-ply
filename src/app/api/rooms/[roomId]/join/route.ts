@@ -27,7 +27,7 @@ export async function POST(
         return NextResponse.json({ message: 'Room not found' }, { status: 404 })
 
     const role: RoomRole = room.ownerId === email ? 'HOST' : 'GUEST'
-    const now = new Date()
+    const now = Date.now()
 
     // upsert: 있으면 갱신, 없으면 추가
     await members.updateOne(

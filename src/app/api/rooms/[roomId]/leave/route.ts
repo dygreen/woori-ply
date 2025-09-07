@@ -24,7 +24,7 @@ export async function POST(
 
     await members.updateOne(
         { roomId, userId: email },
-        { $set: { active: false, leftAt: new Date() } },
+        { $set: { active: false, leftAt: Date.now() } },
     )
 
     // Ably REST로 현재 presence 확인

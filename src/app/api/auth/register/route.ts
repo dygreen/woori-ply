@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         const passwordHash = await hashPassword(password)
 
         // 5) 저장
-        const now = new Date()
+        const now = Date.now()
         const doc = {
             name,
             email,

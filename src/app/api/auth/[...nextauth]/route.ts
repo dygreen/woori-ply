@@ -80,7 +80,7 @@ const authOptions: NextAuthOptions = {
             const filter = email
                 ? { $or: [{ email }, { githubId }] }
                 : { githubId }
-            const now = new Date()
+            const now = Date.now()
 
             await users.updateOne(
                 filter,

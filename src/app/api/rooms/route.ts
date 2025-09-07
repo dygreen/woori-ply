@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const members = database.collection<RoomMember>('room_members')
     const { maxSongs } = await req.json()
 
-    const now = new Date()
+    const now = Date.now()
     const doc: Room = {
         _id: new ObjectId(),
         roomId,

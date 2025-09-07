@@ -7,8 +7,8 @@ export async function closeRoomInDBAndNotify(roomId: string) {
     const rooms = database.collection<Room>('rooms')
 
     const result = await rooms.updateOne(
-        { roomId, status: { $ne: 'closed' } },
-        { $set: { status: 'closed', closedAt: new Date() } },
+        { roomId, status: { $ne: 'CLOSED' } },
+        { $set: { status: 'CLOSED', closedAt: Date.now() } },
     )
 
     if (result.modifiedCount === 1) {

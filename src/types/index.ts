@@ -12,8 +12,8 @@ export type User = {
     name: string
     email: string
     password: string
-    createAt?: Date
-    updateAt?: Date
+    createAt?: number
+    updateAt?: number
 }
 
 export type Room = {
@@ -32,8 +32,8 @@ export type Room = {
         track: Track
     }
     voting?: RoomVoting
-    createdAt: Date
-    closedAt?: Date
+    createdAt: number
+    closedAt?: number
 }
 
 export type Playlist = {
@@ -68,9 +68,9 @@ export type RoomMember = {
     roomId: string
     userId: string
     role: RoomRole
-    joinedAt: Date
-    lastSeenAt?: Date
-    leftAt?: Date
+    joinedAt: number
+    lastSeenAt?: number
+    leftAt?: number
     active: boolean
 }
 
