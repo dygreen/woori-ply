@@ -17,14 +17,23 @@ export async function POST(req: NextRequest) {
         const database = await db()
         const users = database.collection<User>('user_cred')
 
-        // 2) 이메일 유니크 인덱스 보장(최초 1회)
+        // 2) 이메일/이름 유니크 인덱스 보장(최초 1회)
         await users.createIndex({ email: 1 }, { unique: true })
+        await users.createIndex({ name: 1 }, { unique: true })
 
         // 3) 이미 존재하는지 체크
-        const existing = await users.findOne({ email })
-        if (existing) {
+        const existingByEmail = await users.findOne({ email })
+        if (existingByEmail) {
             return NextResponse.json(
                 { message: '이미 사용 중인 이메일입니다.' },
+                { status: 409 },
+            )
+        }
+
+        const existingByName = await users.findOne({ name })
+        if (existingByName) {
+            return NextResponse.json(
+                { message: '이미 사용 중인 이름입니다.' },
                 { status: 409 },
             )
         }
@@ -53,10 +62,12 @@ export async function POST(req: NextRequest) {
     } catch (err: any) {
         // MongoDB 중복키(유니크 인덱스) 충돌
         if (err?.code === 11000) {
-            return NextResponse.json(
-                { message: '이미 사용 중인 이메일입니다.' },
-                { status: 409 },
-            )
+            const dupField = Object.keys(err.keyPattern || {})[0]
+            let msg = '이미 사용 중인 값입니다.'
+            if (dupField === 'email') msg = '이미 사용 중인 이메일입니다.'
+            if (dupField === 'name') msg = '이미 사용 중인 이름입니다.'
+
+            return NextResponse.json({ message: msg }, { status: 409 })
         }
 
         // Yup 검증 에러
