@@ -8,7 +8,7 @@ import { ChatMessage } from '@/types'
 export default function RoomChat({ roomId }: { roomId: string }) {
     const { data: session } = useSession()
     const userId = session?.user?.email ?? 'guest@anon'
-    const userName = session?.user?.name ?? 'Guest'
+    const userName = session?.user?.name ?? '알수없음'
     const { connected, messages, members, sendMessage } = useRoomChat({
         roomId,
     })

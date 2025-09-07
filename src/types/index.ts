@@ -26,10 +26,8 @@ export type Room = {
     playlist: Playlist[]
     memberOrder: string[]
     turnIndex: number
-    pickerId?: string
     pickerName?: string
     current?: {
-        pickerId?: string
         pickerName?: string
         track: Track
     }
@@ -40,7 +38,6 @@ export type Room = {
 
 export type Playlist = {
     trackId: string
-    pickerId: string
     pickerName?: string
     addedAt: number
     track?: Track
@@ -58,7 +55,7 @@ type Track = {
 export type RoomVoting = {
     round: number
     trackId: string
-    pickerId: string
+    pickerName: string
     endsAt: number
     status: VotingStatus
     upCount?: number
@@ -72,8 +69,8 @@ export type RoomMember = {
     userId: string
     role: RoomRole
     joinedAt: Date
-    lastSeenAt: Date
-    leftAt: Date
+    lastSeenAt?: Date
+    leftAt?: Date
     active: boolean
 }
 
@@ -118,5 +115,5 @@ export type Vote = {
     userId: string
     value: VoteValue
     lastKey?: string // 마지막 처리한 idempotencyKey
-    updatedAt: Date
+    updatedAt: number
 }

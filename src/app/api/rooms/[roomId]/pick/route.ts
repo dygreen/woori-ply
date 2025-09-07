@@ -3,6 +3,7 @@ import { getServerSession, Session } from 'next-auth'
 import { GET as authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/server/db'
 import { publishRoomEvent } from '@/lib/server/ably'
+import { Room } from '@/types'
 
 export async function POST(
     req: NextRequest,
@@ -20,7 +21,7 @@ export async function POST(
     const { track, idempotencyKey } = body
 
     const database = await db()
-    const rooms = database.collection('rooms')
+    const rooms = database.collection<Room>('rooms')
 
     const room = await rooms.findOne({ roomId })
     if (!room)
@@ -35,7 +36,7 @@ export async function POST(
             { status: 400 },
         )
     }
-    if (room.pickerId !== session?.user?.email) {
+    if (room.pickerName !== session?.user?.name) {
         return NextResponse.json(
             { ok: false, message: 'Not your turn' },
             { status: 403 },
@@ -51,13 +52,12 @@ export async function POST(
                 state: 'VOTING',
                 current: {
                     track,
-                    pickerId: session?.user?.email,
-                    pickerName: session?.user?.name,
+                    pickerName: session?.user?.name ?? '알수없음',
                 },
                 voting: {
                     round: room.turnIndex,
                     trackId: track.id,
-                    pickerId: session?.user?.email,
+                    pickerName: session?.user?.name ?? '알수없음',
                     endsAt,
                     status: 'OPEN',
                 },

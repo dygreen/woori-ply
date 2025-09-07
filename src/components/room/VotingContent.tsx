@@ -102,6 +102,7 @@ export default function VotingContent({
 
     // B) 실시간 합계로 전원 완료 감지 → 마감
     useEffect(() => {
+        console.log('roomState: ', roomState)
         if (roomState !== 'VOTING') return
 
         // 요약이 없으면 동작하지 않음 (멤버수 추론 X)
@@ -111,6 +112,7 @@ export default function VotingContent({
         const total = summary.total
 
         if (total > 0 && completed >= total) {
+            console.log('roomState2: ', roomState)
             finalizeOnce('ALL_VOTED')
         }
     }, [roomState, summary?.completed, summary?.total, finalizeOnce])

@@ -44,5 +44,12 @@ export async function POST(
         { upsert: true },
     )
 
+    await rooms.updateOne(
+        { roomId },
+        {
+            $addToSet: { memberOrder: session?.user?.name }, // 중복 방지
+        },
+    )
+
     return NextResponse.json({ ok: true, role, state: room.state })
 }

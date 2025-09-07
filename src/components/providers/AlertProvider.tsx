@@ -53,7 +53,9 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
         horizontal: 'center',
     })
 
-    const closeAlert = useCallback(() => setOpen(false), [])
+    const closeAlert = useCallback(() => {
+        if (open) setOpen(false)
+    }, [])
 
     const showAlert = useCallback((opts: AlertOptions) => {
         setState((prev) => ({

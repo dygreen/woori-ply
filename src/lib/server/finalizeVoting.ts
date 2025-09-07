@@ -73,7 +73,7 @@ export async function finalizeVoting(
         return { skipped: true }
     }
 
-    const { round, trackId, pickerId } = lockRes.voting!
+    const { round, trackId, pickerName } = lockRes.voting!
 
     // 집계: 트랙 기준 → 0표면 라운드 기준 폴백
     const aggWithTrack = await votes
@@ -115,13 +115,12 @@ export async function finalizeVoting(
     const order = lockRes.memberOrder ?? []
     const currTurn = lockRes.turnIndex ?? 0
     const nextTurn = order.length ? (currTurn + 1) % order.length : currTurn + 1
-    const nextPickerId = order.length ? order[nextTurn] : undefined
+    const nextPickerName = order.length ? order[nextTurn] : undefined
     const nextState: 'PICKING' | 'FINISHED' = willFinish
         ? 'FINISHED'
         : 'PICKING'
 
     const trackSnapshot = lockRes.current?.track
-    const pickerNameSnapshot = lockRes.current?.pickerName
 
     if (accepted) {
         await rooms.updateOne(
@@ -130,11 +129,8 @@ export async function finalizeVoting(
                 $push: {
                     playlist: {
                         trackId,
-                        pickerId,
+                        pickerName,
                         addedAt: now,
-                        ...(pickerNameSnapshot
-                            ? { pickerName: pickerNameSnapshot }
-                            : {}),
                         ...(trackSnapshot ? { track: trackSnapshot } : {}),
                     },
                 },
@@ -149,7 +145,7 @@ export async function finalizeVoting(
             $set: {
                 state: nextState,
                 turnIndex: nextTurn,
-                ...(willFinish ? {} : { pickerId: nextPickerId }),
+                ...(willFinish ? {} : { pickerName: nextPickerName }),
                 'voting.upCount': upCount,
                 'voting.downCount': downCount,
                 'voting.status': 'APPLIED',
@@ -157,7 +153,7 @@ export async function finalizeVoting(
             $unset: {
                 current: '',
                 'voting.applyAt': '',
-                ...(willFinish ? { pickerId: '' } : {}),
+                ...(willFinish ? { pickerName: '' } : {}),
             },
         },
     )
@@ -174,14 +170,14 @@ export async function finalizeVoting(
         await publishRoomEvent(roomId, 'APPLIED', {
             round,
             trackId,
-            pickerId,
+            pickerName,
             upCount,
             downCount,
             accepted,
             reason,
             nextState,
             nextTurnIndex: nextTurn,
-            nextPickerId,
+            nextPickerName,
             newPlaylistLen: updated.playlist?.length ?? willLen,
             playlist: updated.playlist,
         })

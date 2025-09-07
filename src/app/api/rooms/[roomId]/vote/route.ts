@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { db } from '@/lib/server/db'
 import { publishRoomEvent } from '@/lib/server/ably'
 import { finalizeVoting } from '@/lib/server/finalizeVoting'
-import { Room, VoteValue } from '@/types'
+import { Room, Vote, VoteValue } from '@/types'
 
 export async function POST(
     req: NextRequest,
@@ -34,7 +34,7 @@ export async function POST(
     const { roomId } = await params
     const database = await db()
     const rooms = database.collection<Room>('rooms')
-    const votes = database.collection('votes')
+    const votes = database.collection<Vote>('votes')
 
     // 최신 룸 스냅샷
     const room = await rooms.findOne({ roomId })
@@ -56,7 +56,7 @@ export async function POST(
     }
 
     const now = Date.now()
-    const { round, trackId, pickerId, endsAt } = room.voting
+    const { round, trackId, pickerName, endsAt } = room.voting
     const userId = String(session.user.email)
 
     // ── 1) 멱등 처리: 같은 key로 같은 값이면 요약만 리턴
@@ -88,7 +88,7 @@ export async function POST(
                 roomId,
                 round,
                 trackId,
-                pickerId,
+                pickerName,
                 userId,
                 value: value as VoteValue,
                 updatedAt: now,
@@ -108,11 +108,8 @@ export async function POST(
     }
 
     // ── 5) 전원 투표 완료 시 즉시 마감
-    const eligibleVoters = (room.memberOrder ?? []).filter(
-        (id) => id !== pickerId,
-    )
-    const allVoted = summary.completed >= eligibleVoters.length
-    if (eligibleVoters.length >= 1 && allVoted) {
+    const allVoted = summary.completed >= room.memberOrder.length
+    if (allVoted) {
         await finalizeVoting(database, roomId, 'ALL_VOTED')
     }
 
@@ -142,11 +139,11 @@ async function computeSummary(
     const down = agg.find((g: any) => g._id === 'DOWN')?.count ?? 0
     const completed = up + down
 
-    // 총 투표 대상자: picker 제외 (추천자는 표를 던지지 않는 규칙)
-    const eligibleVoters = (room.memberOrder ?? []).filter(
-        (id) => id !== room.voting?.pickerId,
-    )
-    const total = eligibleVoters.length
-
-    return { up, down, completed, total, endsAt: room.voting!.endsAt }
+    return {
+        up,
+        down,
+        completed,
+        total: room.memberOrder.length,
+        endsAt: room.voting!.endsAt,
+    }
 }

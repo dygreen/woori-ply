@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession, Session } from 'next-auth'
 import { GET as authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { customAlphabet } from 'nanoid'
-import { Room } from '@/types'
+import { Room, RoomMember } from '@/types'
 import { db } from '@/lib/server/db'
 import { ObjectId } from 'mongodb'
 
@@ -14,6 +14,7 @@ const nanoid = customAlphabet(
 export async function POST(req: NextRequest) {
     const session: Session | null = await getServerSession(authOptions)
     const userId = session?.user?.email
+    const userName = session?.user?.name
     // 로그인 여부 체크
     if (!userId) {
         return NextResponse.json(
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     const roomId = nanoid()
     const database = await db()
     const rooms = database.collection<Room>('rooms')
-    const members = database.collection('room_members')
+    const members = database.collection<RoomMember>('room_members')
     const { maxSongs } = await req.json()
 
     const now = new Date()
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
         state: 'IDLE',
         maxSongs,
         playlist: [],
-        memberOrder: [userId],
+        memberOrder: [userName ?? '알수없음'],
         turnIndex: 0,
         current: undefined,
         createdAt: now,

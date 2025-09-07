@@ -3,13 +3,6 @@ import { getServerSession, Session } from 'next-auth'
 import { GET as authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { db } from '@/lib/server/db'
 import { publishRoomEvent } from '@/lib/server/ably'
-import { Db } from 'mongodb'
-
-async function getMemberName(database: Db, roomId: string, userId: string) {
-    const members = database.collection('room_members')
-    const m = await members.findOne({ roomId, userId })
-    return m?.userName ?? userId
-}
 
 export async function POST(
     _req: NextRequest,
@@ -40,25 +33,21 @@ export async function POST(
         )
     }
 
-    // 상태 검증
-    // TODO: 주석 제거
-    // if (room.state !== 'IDLE') {
-    //     return NextResponse.json(
-    //         { ok: false, message: 'Invalid state' },
-    //         { status: 400 },
-    //     )
-    // }
+    if (room.state !== 'IDLE') {
+        return NextResponse.json(
+            { ok: false, message: 'Invalid state' },
+            { status: 400 },
+        )
+    }
 
     // PICKING 전이
-    const nextPickerId = room.memberOrder[room.turnIndex ?? 0]
-    const nextPickerName = await getMemberName(database, roomId, nextPickerId)
+    const nextPickerName = room.memberOrder[room.turnIndex ?? 0]
 
     const updated = await rooms.findOneAndUpdate(
         { roomId, state: 'IDLE' },
         {
             $set: {
                 state: 'PICKING',
-                pickerId: nextPickerId,
                 pickerName: nextPickerName,
             },
         },
@@ -67,7 +56,6 @@ export async function POST(
 
     // 이벤트 브로드캐스트
     await publishRoomEvent(roomId, 'TURN_STARTED', {
-        pickerId: nextPickerId,
         pickerName: nextPickerName,
     })
     await publishRoomEvent(roomId, 'ROOM_STATE', updated)
