@@ -166,7 +166,7 @@ export async function finalizeVoting(
     const updated = (await rooms.findOne({
         _id: lockRes._id,
     })) as Room | null
-    console.log('updated : ', updated)
+    // console.log('updated : ', updated)
     if (!updated) return { skipped: true }
 
     // 이벤트
@@ -195,6 +195,7 @@ export async function finalizeVoting(
         console.error('[ROOM_STATE publish failed]', e)
     }
 
+    // console.log('nextState : ', nextState)
     return {
         skipped: false,
         accepted,

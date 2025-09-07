@@ -5,7 +5,7 @@ import { useCountdown } from '@/hooks/useCountdown'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import s from '@/app/rooms/[roomId]/room.module.scss'
 import { useVoting, VoteSummary } from '@/hooks/useVoting'
-import { RoomState, RoomVoting, VoteValue } from '@/types'
+import { RoomState, RoomVoting, VoteValue, VotingReason } from '@/types'
 
 interface VotingContentProps {
     roomId: string
@@ -77,7 +77,7 @@ export default function VotingContent({
 
     const finalizeOnceRef = useRef(false)
     const finalizeOnce = useCallback(
-        async (reason: 'ENDS_AT' | 'ALL_VOTED') => {
+        async (reason: VotingReason) => {
             if (finalizeOnceRef.current) return
             finalizeOnceRef.current = true
             try {

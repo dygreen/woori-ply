@@ -24,6 +24,7 @@ export async function POST(
             allowHostTieBreak: true,
         })
 
+        // console.log('[apply] result:', result)
         if (result.skipped) {
             return NextResponse.json(
                 { ok: false, message: 'SKIPPED' },
