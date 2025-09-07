@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRoomChat } from '@/hooks/useRoomChat'
 import { Button, TextField } from '@mui/material'
 import { ChatMessage } from '@/types'
+import s from '@/app/rooms/[roomId]/room.module.scss'
 
 export default function RoomChat({ roomId }: { roomId: string }) {
     const { data: session } = useSession()
@@ -37,7 +38,7 @@ export default function RoomChat({ roomId }: { roomId: string }) {
     }, [messages.length])
 
     return (
-        <div className="flex flex-col h-full">
+        <div className={s.chat_aside}>
             <div className="text-sm text-gray-500 mb-2">
                 {connected ? '● 온라인' : '○ 오프라인'} · 접속자{' '}
                 {members.length}명

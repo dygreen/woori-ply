@@ -24,10 +24,10 @@ export default function SelectedAlbum({ roomDetail }: SelectedAlbumProps) {
                 />
             </div>
             <div className={s.detail_wrapper}>
-                <h3>{track?.name ?? '-'}</h3>
-                <p>{track?.album?.name ?? '-'}</p>
+                <h3>{track?.name ?? 'TRACK NAME'}</h3>
+                <p>{track?.album?.name ?? 'ALBUM NAME'}</p>
                 <div className={s.artist_row}>
-                    <span>{track?.artists ?? '-'}</span>
+                    <span>{track?.artists ?? 'ARTIST'}</span>
                     <Divider
                         orientation="vertical"
                         flexItem

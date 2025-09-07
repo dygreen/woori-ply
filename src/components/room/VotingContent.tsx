@@ -6,6 +6,7 @@ import { useRoomChannel } from '@/hooks/useRoomChannel'
 import s from '@/app/rooms/[roomId]/room.module.scss'
 import { useVoting, VoteSummary } from '@/hooks/useVoting'
 import { RoomState, RoomVoting, VoteValue, VotingReason } from '@/types'
+import { Angry, Smile } from 'lucide-react'
 
 interface VotingContentProps {
     roomId: string
@@ -133,10 +134,7 @@ export default function VotingContent({
     }, [voting?.round, endsAt])
 
     return (
-        <section
-            className={s.voting_section}
-            aria-busy={showApplying || !connected}
-        >
+        <div className={s.voting_aside} aria-busy={showApplying || !connected}>
             <header className={s.header}>
                 <strong>투표</strong>
                 {endsAt ? (
@@ -147,8 +145,15 @@ export default function VotingContent({
 
             <div className={s.summary}>
                 <div className={s.counts}>
-                    <span>👍 {up}</span>
-                    <span>👎 {down}</span>
+                    <div>
+                        <span>
+                            <Smile size={24} />
+                        </span>{' '}
+                        <span>{up}</span>
+                    </div>
+                    <span>
+                        <Angry size={24} /> {down}
+                    </span>
                 </div>
                 <div className={s.progress_wrap}>
                     <div className={s.progress_bar}>
@@ -191,6 +196,6 @@ export default function VotingContent({
             {isOver && roomState === 'VOTING' && (
                 <p className={s.hint}>마감 처리 중…</p>
             )}
-        </section>
+        </div>
     )
 }

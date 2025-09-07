@@ -15,6 +15,7 @@ import SelectedAlbum from '@/components/room/SelectedAlbum'
 import VotedPlyTable from '@/components/room/VotedPlyTable'
 import VotingContent from '@/components/room/VotingContent'
 import Link from 'next/link'
+import { Divider } from '@mui/material'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
@@ -185,11 +186,6 @@ export default function RoomPage() {
                     <>
                         <section className={s.album_section}>
                             <SelectedAlbum roomDetail={roomDetail} />
-                            <VotingContent
-                                roomId={roomId}
-                                roomState={state}
-                                voting={roomDetail?.voting}
-                            />
                         </section>
                         <section className={s.table_section}>
                             <VotedPlyTable playlist={roomDetail?.playlist} />
@@ -212,6 +208,16 @@ export default function RoomPage() {
                         {renderByRoomState(roomDetail?.state ?? roomState)}
                     </main>
                     <aside>
+                        {(roomDetail?.state ?? roomState) !== 'IDLE' && (
+                            <div className={s.upper_aside}>
+                                <VotingContent
+                                    roomId={roomId}
+                                    roomState={roomDetail?.state ?? roomState}
+                                    voting={roomDetail?.voting}
+                                />
+                                <Divider variant="fullWidth" component="li" />
+                            </div>
+                        )}
                         <RoomChat roomId={roomId} />
                     </aside>
                 </div>
