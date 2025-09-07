@@ -16,8 +16,10 @@
   background-color: white;
 
   header {
-    font-family: 'FlightSans-Bold', 'Roboto';
-    font-size: 20px;
+    a {
+      font-family: 'FlightSans-Bold', 'Roboto';
+      font-size: 20px;
+    }
     margin-bottom: 16px;
   }
 

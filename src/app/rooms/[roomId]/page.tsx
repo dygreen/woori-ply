@@ -14,13 +14,12 @@ import { useRoomEvents } from '@/lib/client/useRoomEvents'
 import SelectedAlbum from '@/components/room/SelectedAlbum'
 import VotedPlyTable from '@/components/room/VotedPlyTable'
 import VotingContent from '@/components/room/VotingContent'
+import Link from 'next/link'
 
 export default function RoomPage() {
     const { roomId } = useParams<{ roomId: string }>()
     const { data: session } = useSession()
     const router = useRouter()
-    const { showSuccess, showError } = useAlert()
-    const { connected, members, publish, subscribe } = useRoomChannel(roomId)
 
     const [userRole, setUserRole] = useState<RoomRole | null>(null)
     const [roomState, setRoomState] = useState<RoomState>('IDLE')
@@ -28,6 +27,9 @@ export default function RoomPage() {
 
     const [modalOpen, setModalOpen] = useState(false)
     const [selected, setSelected] = useState<SpotifyTrack | null>(null)
+
+    const { showSuccess, showError, showInfo, closeAlert } = useAlert()
+    const { connected, members, publish, subscribe } = useRoomChannel(roomId)
 
     const handleSelect = async (track: SpotifyTrack) => {
         setSelected(track)
@@ -159,6 +161,14 @@ export default function RoomPage() {
                     <p>로딩중...</p>
                 </section>
             )
+        if (state === 'PICKING') {
+            showInfo(`${roomDetail?.pickerName} 님이 곡을 고르는 중...`, {
+                autoHideDuration: 600000, // 10분
+            })
+        } else {
+            closeAlert()
+        }
+
         switch (state) {
             case 'IDLE':
                 return (
@@ -168,12 +178,6 @@ export default function RoomPage() {
                             isHost={userRole === 'HOST'}
                             onModalOpen={handleModalOpen}
                         />
-                    </section>
-                )
-            case 'PICKING':
-                return (
-                    <section className={s.start_section}>
-                        <p>{roomDetail?.pickerName} 님이 곡을 고르는 중...</p>
                     </section>
                 )
             default:
@@ -200,7 +204,9 @@ export default function RoomPage() {
     return (
         <>
             <div className={s.room_layout}>
-                <header>우리플리</header>
+                <header>
+                    <Link href="/">우리플리</Link>
+                </header>
                 <div className={s.room_content}>
                     <main>
                         {renderByRoomState(roomDetail?.state ?? roomState)}
