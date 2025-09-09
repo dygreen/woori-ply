@@ -137,23 +137,34 @@ export default function VotingContent({
         <div className={s.voting_aside} aria-busy={showApplying || !connected}>
             <header className={s.header}>
                 <strong>투표</strong>
-                {endsAt ? (
-                    <span className={s.timer}>남은 시간 {remainSec}s</span>
-                ) : null}
-                {showApplying && <span className={s.badge}>집계 중…</span>}
+                <div>
+                    {endsAt ? (
+                        <span className={s.timer}>남은 시간 {remainSec}초</span>
+                    ) : null}
+                    {showApplying && <span className={s.badge}>집계 중…</span>}
+                </div>
             </header>
 
             <div className={s.summary}>
-                <div className={s.counts}>
-                    <div>
-                        <span>
-                            <Smile size={24} />
-                        </span>{' '}
-                        <span>{up}</span>
-                    </div>
-                    <span>
-                        <Angry size={24} /> {down}
-                    </span>
+                <div className={s.buttons}>
+                    <button
+                        type="button"
+                        className={`${s.btn} ${s.up} ${myVote === 'UP' ? s.active : ''}`}
+                        onClick={() => sendVote('UP')}
+                        disabled={disableButtons}
+                    >
+                        <Smile size={36} />
+                        <div className={s.count}>{up}</div>
+                    </button>
+                    <button
+                        type="button"
+                        className={`${s.btn} ${s.down} ${myVote === 'DOWN' ? s.active : ''}`}
+                        onClick={() => sendVote('DOWN')}
+                        disabled={disableButtons}
+                    >
+                        <Angry size={36} />
+                        <div className={s.count}>{down}</div>
+                    </button>
                 </div>
                 <div className={s.progress_wrap}>
                     <div className={s.progress_bar}>
@@ -171,31 +182,13 @@ export default function VotingContent({
                         {completed}/{total} 투표 완료
                     </span>
                 </div>
+                <div className={s.info_wrap}>
+                    {!connected && <p className={s.hint}>실시간 연결 중…</p>}
+                    {isOver && roomState === 'VOTING' && (
+                        <p className={s.hint}>마감 처리 중…</p>
+                    )}
+                </div>
             </div>
-
-            <div className={s.buttons}>
-                <button
-                    type="button"
-                    className={`${s.btn} ${s.up} ${myVote === 'UP' ? s.active : ''}`}
-                    onClick={() => sendVote('UP')}
-                    disabled={disableButtons}
-                >
-                    Boom Up
-                </button>
-                <button
-                    type="button"
-                    className={`${s.btn} ${s.down} ${myVote === 'DOWN' ? s.active : ''}`}
-                    onClick={() => sendVote('DOWN')}
-                    disabled={disableButtons}
-                >
-                    Boom Down
-                </button>
-            </div>
-
-            {!connected && <p className={s.hint}>실시간 연결 중…</p>}
-            {isOver && roomState === 'VOTING' && (
-                <p className={s.hint}>마감 처리 중…</p>
-            )}
         </div>
     )
 }
