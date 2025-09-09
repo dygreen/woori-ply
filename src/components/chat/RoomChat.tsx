@@ -92,8 +92,17 @@ export default function RoomChat({ roomId }: { roomId: string }) {
                             handleSend()
                         }
                     }}
+                    inputProps={{
+                        className: 'placeholder:text-sm',
+                    }}
                 />
-                <Button variant="contained" onClick={handleSend}>
+                <Button
+                    variant="contained"
+                    size="small"
+                    type="submit"
+                    color="inherit"
+                    onClick={handleSend}
+                >
                     보내기
                 </Button>
             </div>
