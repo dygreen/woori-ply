@@ -90,8 +90,49 @@
         }
 
         &.table_section {
-          background-color: #96fbc4;
           height: 65%;
+          padding: 16px;
+
+          .empty_info{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 20px;
+            font-weight: 500;
+            color: $grey-text-color;
+          }
+
+          table {
+            width: 100%;
+            height: auto;
+
+            thead {
+              color: $grey-icon-disabled-color;
+              border-bottom: 1px solid $grey-border-color;
+              text-align: left;
+              th {
+                padding: 8px 0;
+              }
+            }
+
+            tbody {
+              tr {
+                font-size: 14px;
+                font-weight: 400;
+                border-bottom: 1px solid $grey-border-color;
+
+                td {
+                  &.album_image_wrap {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                  }
+                  padding: 4px 0;
+                }
+              }
+            }
+          }
         }
 
         &.start_section {

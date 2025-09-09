@@ -1,8 +1,8 @@
-// VotedPlyTable.tsx
 import React from 'react'
-import { Playlist, SpotifyTrack } from '@/types'
+import { Playlist } from '@/types'
 import Image from 'next/image'
 import { formatMs, pickAlbumImage } from '@/lib/spotify/utils'
+import s from '@/app/rooms/[roomId]/room.module.scss'
 
 interface VotedPlyTableProps {
     playlist?: Playlist[]
@@ -10,13 +10,12 @@ interface VotedPlyTableProps {
 
 export default function VotedPlyTable({ playlist }: VotedPlyTableProps) {
     if (!playlist || playlist.length === 0)
-        return <div>아직 채택된 곡이 없어요</div>
+        return <div className={s.empty_info}>아직 채택된 곡이 없어요</div>
 
     return (
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>TRACK</th>
                     <th>ARTIST</th>
                     <th>ALBUM</th>
@@ -25,10 +24,9 @@ export default function VotedPlyTable({ playlist }: VotedPlyTableProps) {
                 </tr>
             </thead>
             <tbody>
-                {playlist.map((it, idx) => (
+                {playlist.map((it) => (
                     <tr key={it.addedAt}>
-                        <td>{idx + 1}</td>
-                        <td>
+                        <td className={s.album_image_wrap}>
                             <div className="h-12 w-12 overflow-hidden rounded-md bg-gray-100">
                                 <Image
                                     src={pickAlbumImage(
