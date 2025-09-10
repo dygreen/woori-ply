@@ -55,7 +55,7 @@ export function AlertProvider({ children }: { children: React.ReactNode }) {
 
     const closeAlert = useCallback(() => {
         if (open) setOpen(false)
-    }, [])
+    }, [open])
 
     const showAlert = useCallback((opts: AlertOptions) => {
         setState((prev) => ({
