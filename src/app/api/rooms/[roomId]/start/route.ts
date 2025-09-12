@@ -48,6 +48,7 @@ export async function POST(
         {
             $set: {
                 state: 'PICKING',
+                modalMode: 'AUTO',
                 pickerName: nextPickerName,
             },
         },

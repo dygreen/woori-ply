@@ -119,50 +119,62 @@ export async function finalizeVoting(
     const nextState: 'PICKING' | 'FINISHED' = willFinish
         ? 'FINISHED'
         : 'PICKING'
+    const nextRound = (lockRes.voting?.round ?? -1) + 1
 
     const trackSnapshot = lockRes.current?.track
 
+    const setOps: any = {
+        state: nextState,
+        'voting.upCount': upCount,
+        'voting.downCount': downCount,
+        'voting.status': 'APPLIED',
+    }
+    const unsetOps: any = {
+        'voting.applyAt': '',
+    }
+    const pushOps: any = {}
+
     if (accepted) {
-        await rooms.updateOne(
-            { _id: lockRes._id },
-            {
-                $push: {
-                    playlist: {
-                        trackId,
-                        pickerName,
-                        addedAt: now,
-                        ...(trackSnapshot ? { track: trackSnapshot } : {}),
-                    },
-                },
-            },
-        )
+        pushOps['playlist'] = {
+            trackId,
+            pickerName,
+            addedAt: now,
+            ...(trackSnapshot ? { track: trackSnapshot } : {}),
+        }
     }
 
-    // 상태 전이 + voting APPLIED + applyAt 정리 + current 정리
-    await rooms.updateOne(
-        { _id: lockRes._id },
-        {
-            $set: {
-                state: nextState,
-                turnIndex: nextTurn,
-                ...(willFinish ? {} : { pickerName: nextPickerName }),
-                'voting.upCount': upCount,
-                'voting.downCount': downCount,
-                'voting.status': 'APPLIED',
-            },
-            $unset: {
-                current: '',
-                'voting.applyAt': '',
-                ...(willFinish ? { pickerName: '' } : {}),
-            },
-        },
-    )
+    if (nextState === 'PICKING') {
+        // 다음 차례 지정: current 를 오직 pickerName만 가진 상태로 재설정
+        setOps['turnIndex'] = nextTurn
+        if (nextPickerName) {
+            setOps['current'] = { pickerName: nextPickerName }
+            setOps['pickerName'] = nextPickerName
+        } else {
+            // 멤버가 없다면 current 비움
+            unsetOps['current'] = ''
+            unsetOps['pickerName'] = ''
+        }
+
+        setOps['voting'] = {
+            round: nextRound,
+            // status: 'IDLE', // /pick에서 OPEN으로 전환
+            // upCount: 0,
+            // downCount: 0,
+            // trackId/endsAt/applyAt 등은 비움; /pick에서 세팅
+        }
+    } else {
+        // FINISHED: current / pickerName 정리
+        unsetOps['current'] = ''
+        unsetOps['pickerName'] = ''
+    }
+
+    const updateOps: any = { $set: setOps, $unset: unsetOps }
+    if (accepted) updateOps.$push = pushOps
+
+    await rooms.updateOne({ _id: lockRes._id }, updateOps)
 
     // 최종 스냅샷
-    const updated = (await rooms.findOne({
-        _id: lockRes._id,
-    })) as Room | null
-    // console.log('updated : ', updated)
+    const updated = (await rooms.findOne({ _id: lockRes._id })) as Room | null
     if (!updated) return { skipped: true }
 
     // 이벤트
@@ -176,8 +188,8 @@ export async function finalizeVoting(
             accepted,
             reason,
             nextState,
-            nextTurnIndex: nextTurn,
-            nextPickerName,
+            nextTurnIndex: updated.turnIndex,
+            nextPickerName: updated.current?.pickerName ?? updated.pickerName,
             newPlaylistLen: updated.playlist?.length ?? willLen,
             playlist: updated.playlist,
         })
@@ -191,7 +203,6 @@ export async function finalizeVoting(
         console.error('[ROOM_STATE publish failed]', e)
     }
 
-    // console.log('nextState : ', nextState)
     return {
         skipped: false,
         accepted,

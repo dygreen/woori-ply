@@ -1,14 +1,21 @@
 'use client'
 
 import { notFound, useParams, useRouter } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useAlert } from '@/components/providers/AlertProvider'
 import SpotifyPickModal from '@/components/spotify/SpotifyPickModal'
 import { useRoomChannel } from '@/hooks/useRoomChannel'
 import RoomChat from '@/components/chat/RoomChat'
 import s from '@/app/rooms/[roomId]/room.module.scss'
-import { Playlist, Room, RoomRole, RoomState, SpotifyTrack } from '@/types'
+import {
+    Playlist,
+    Room,
+    RoomModalMode,
+    RoomRole,
+    RoomState,
+    SpotifyTrack,
+} from '@/types'
 import RoomStartButton from '@/components/room/RoomStartButton'
 import { useRoomEvents } from '@/lib/client/useRoomEvents'
 import SelectedAlbum from '@/components/room/SelectedAlbum'
@@ -26,19 +33,63 @@ export default function RoomPage() {
     const [roomState, setRoomState] = useState<RoomState>('IDLE')
     const [roomDetail, setRoomDetail] = useState<Room | null>(null)
 
-    const [modalOpen, setModalOpen] = useState(false)
+    const [modalOpen, setModalOpen] = useState<boolean>(false)
     const [selected, setSelected] = useState<SpotifyTrack | null>(null)
 
     const { showSuccess, showError, showInfo, closeAlert } = useAlert()
     const { connected, members, publish, subscribe } = useRoomChannel(roomId)
-
-    const handleSelect = async (track: SpotifyTrack) => {
-        setSelected(track)
-        setModalOpen(false)
-    }
+    const lastOpenKeyRef = useRef<string | number | null>(null)
+    const modalByRef = useRef<RoomModalMode>('MANUAL')
 
     const handleModalOpen = () => {
+        // modalByRef.current = 'auto'
         setModalOpen(true)
+    }
+
+    useEffect(() => {
+        modalByRef.current = roomDetail?.modalMode ?? 'MANUAL'
+    }, [roomDetail?.modalMode])
+
+    // 4) 자동 오픈/닫기 useEffect 수정 (HOST 가드 제거!)
+    useEffect(() => {
+        if (!roomDetail) return
+
+        const isPicking = roomDetail.state === 'PICKING'
+        const me = session?.user?.name ?? null
+        const currentPicker =
+            roomDetail?.current?.pickerName ?? roomDetail?.pickerName ?? null
+        const isMyTurn = Boolean(
+            isPicking && currentPicker && me && currentPicker === me,
+        )
+
+        console.log('EFFECT isPicking : ', isPicking)
+        console.log('EFFECT me : ', me)
+        console.log('EFFECT currentPicker : ', currentPicker)
+        console.log('EFFECT isMyTurn : ', isMyTurn)
+        console.log('EFFECT modalByRef.current : ', modalByRef.current)
+
+        if (modalByRef.current === 'AUTO') {
+            if (isMyTurn) {
+                handleModalOpen()
+            } else {
+                handleModalClose()
+            }
+        }
+    }, [
+        roomDetail?.state,
+        roomDetail?.turnIndex,
+        roomDetail?.pickerName,
+        roomDetail?.current?.pickerName,
+        // roomDetail?.voting?.pickerName,
+        session?.user?.name,
+        // session?.user?.email,
+        // modalOpen,
+        // showInfo,
+    ])
+
+    // 5) 수동으로 닫을 때 ref 초기화(선택)
+    const handleModalClose = () => {
+        setModalOpen(false)
     }
 
     // 방 입장 API
@@ -162,7 +213,7 @@ export default function RoomPage() {
                     <p>로딩중...</p>
                 </section>
             )
-        if (state === 'PICKING') {
+        if (state === 'PICKING' && roomDetail?.pickerName) {
             showInfo(`${roomDetail?.pickerName} 님이 곡을 고르는 중...`, {
                 autoHideDuration: 600000, // 10분
             })
@@ -225,7 +276,7 @@ export default function RoomPage() {
             {modalOpen && (
                 <SpotifyPickModal
                     open={modalOpen}
-                    onClose={() => setModalOpen(false)}
+                    onClose={handleModalClose}
                     roomId={roomId}
                     roomState={roomDetail?.state}
                 />

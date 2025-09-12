@@ -3,9 +3,10 @@ import { ObjectId } from 'mongodb'
 export type RoomStatus = 'OPEN' | 'CLOSED'
 export type RoomRole = 'HOST' | 'GUEST'
 export type RoomState = 'IDLE' | 'PICKING' | 'VOTING' | 'APPLYING' | 'FINISHED'
+export type RoomModalMode = 'AUTO' | 'MANUAL'
 
 export type VoteValue = 'UP' | 'DOWN'
-export type VotingStatus = 'OPEN' | 'APPLYING' | 'APPLIED'
+export type VotingStatus = 'IDLE' | 'OPEN' | 'APPLYING' | 'APPLIED'
 export type VotingReason = 'ENDS_AT' | 'ALL_VOTED' | 'FORCE'
 
 export type User = {
@@ -34,6 +35,7 @@ export type Room = {
     voting?: RoomVoting
     createdAt: number
     closedAt?: number
+    modalMode?: RoomModalMode
 }
 
 export type Playlist = {

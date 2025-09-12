@@ -24,6 +24,8 @@ export async function POST(
     const rooms = database.collection<Room>('rooms')
 
     const room = await rooms.findOne({ roomId })
+    const nextRound = room?.voting?.round ?? 0
+
     if (!room)
         return NextResponse.json(
             { ok: false, message: 'Not found' },
@@ -55,11 +57,13 @@ export async function POST(
                     pickerName: session?.user?.name ?? '알수없음',
                 },
                 voting: {
-                    round: room.turnIndex,
+                    round: nextRound,
                     trackId: track.id,
                     pickerName: session?.user?.name ?? '알수없음',
                     endsAt,
                     status: 'OPEN',
+                    // upCount: 0,
+                    // downCount: 0,
                 },
             },
         },
