@@ -103,16 +103,15 @@
             color: $grey-text-color;
           }
 
-          table {
-            width: 100%;
-            height: auto;
+          .table_container {
+            height: 100%;
+            overflow-y: auto;
 
             thead {
-              color: $grey-icon-disabled-color;
-              border-bottom: 1px solid $grey-border-color;
-              text-align: left;
-              th {
-                padding: 8px 0;
+              tr {
+                th {
+                  padding: 4px 12px;
+                }
               }
             }
 
@@ -124,11 +123,11 @@
 
                 td {
                   &.album_image_wrap {
-                    display: flex;
+                    //display: flex;
                     gap: 8px;
-                    align-items: center;
+                    //align-items: center;
                   }
-                  padding: 4px 0;
+                  padding: 4px 12px;
                 }
               }
             }
