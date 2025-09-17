@@ -123,53 +123,44 @@ export async function finalizeVoting(
 
     const trackSnapshot = lockRes.current?.track
 
+    // setOps/unsetOps 구성 예시
     const setOps: any = {
         state: nextState,
-        'voting.upCount': upCount,
-        'voting.downCount': downCount,
-        'voting.status': 'APPLIED',
-    }
-    const unsetOps: any = {
-        'voting.applyAt': '',
-    }
-    const pushOps: any = {}
-
-    if (accepted) {
-        pushOps['playlist'] = {
-            trackId,
-            pickerName,
-            addedAt: now,
-            ...(trackSnapshot ? { track: trackSnapshot } : {}),
-        }
+        turnIndex: nextTurn,
+        'current.pickerName': nextPickerName ?? undefined,
+        pickerName: nextPickerName ?? undefined,
     }
 
+    const unsetOps: any = { 'voting.applyAt': '' }
+
+    // (라운드 종료 후 다음 라운드로 넘길 경우)
     if (nextState === 'PICKING') {
-        // 다음 차례 지정: current 를 오직 pickerName만 가진 상태로 재설정
-        setOps['turnIndex'] = nextTurn
-        if (nextPickerName) {
-            setOps['current'] = { pickerName: nextPickerName }
-            setOps['pickerName'] = nextPickerName
-        } else {
-            // 멤버가 없다면 current 비움
-            unsetOps['current'] = ''
-            unsetOps['pickerName'] = ''
-        }
-
-        setOps['voting'] = {
-            round: nextRound,
-            // status: 'IDLE', // /pick에서 OPEN으로 전환
-            // upCount: 0,
-            // downCount: 0,
-            // trackId/endsAt/applyAt 등은 비움; /pick에서 세팅
-        }
+        // 이전 라운드 결과 필드들은 비우고, round만 다음 값으로
+        setOps['voting.round'] = nextRound
+        unsetOps['voting.status'] = ''
+        unsetOps['voting.upCount'] = ''
+        unsetOps['voting.downCount'] = ''
+        unsetOps['voting.endsAt'] = ''
+        unsetOps['voting.trackId'] = ''
     } else {
-        // FINISHED: current / pickerName 정리
-        unsetOps['current'] = ''
-        unsetOps['pickerName'] = ''
+        // FINISHED로 끝낼 때, 마지막 결과를 남기고 싶다면
+        setOps['voting.status'] = 'APPLIED'
+        setOps['voting.upCount'] = upCount
+        setOps['voting.downCount'] = downCount
+        // 필요시 기타 필드도 dotted로만 세팅/해제
     }
 
     const updateOps: any = { $set: setOps, $unset: unsetOps }
-    if (accepted) updateOps.$push = pushOps
+    if (accepted) {
+        updateOps.$push = {
+            playlist: {
+                trackId,
+                pickerName,
+                addedAt: now,
+                ...(trackSnapshot ? { track: trackSnapshot } : {}),
+            },
+        }
+    }
 
     await rooms.updateOne({ _id: lockRes._id }, updateOps)
 
