@@ -27,7 +27,13 @@ export default function VotingContent({
     const endsAt = voting?.endsAt ?? summary?.endsAt
 
     // 남은 시간
-    const { remainSec, isOver } = useCountdown(endsAt)
+    const everyoneFinished =
+        (summary?.total ?? 0) > 0 &&
+        (summary?.completed ?? 0) >= (summary?.total ?? 0)
+    const showApplying =
+        roomState === 'APPLYING' || voting?.status === 'APPLYING'
+    const paused = showApplying || everyoneFinished
+    const { remainSec, isOver } = useCountdown(endsAt, paused)
 
     // total(완료 대상자) 추론: 서버 요약 > 실시간 멤버수
     const activeTotal = useMemo(() => {
@@ -35,8 +41,6 @@ export default function VotingContent({
         return members?.length ?? 0
     }, [members?.length, summary?.total])
 
-    const showApplying =
-        roomState === 'APPLYING' || voting?.status === 'APPLYING'
     const votingOpen =
         roomState === 'VOTING' && !isOver && voting?.status === 'OPEN'
 
